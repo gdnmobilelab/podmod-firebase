@@ -1,0 +1,23 @@
+{
+  "name": "pushkin-mod",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^2.0.0",
+    "node-fetch": "^1.6.1",
+    "node-pg-migrate": "0.0.10",
+    "pg": "^6.1.0",
+    "pg-migrate": "^2.0.0",
+    "pg-promise": "^5.3.3",
+    "restify": "^4.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^1.8.10"
+  }
+}
