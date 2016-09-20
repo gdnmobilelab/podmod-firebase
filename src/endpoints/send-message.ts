@@ -44,7 +44,7 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
         to: target,
         collapse_key: body.collapse_key,
         priority: body.priority,
-        content_available: true,
+        mutable_content: true,
         time_to_live: body.ttl,
         data: {
             send_time: Date.now(),
@@ -52,6 +52,7 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
             payload: body.payload
         },
         notification: {
+            "mutable-content": 1,
             title: "An update from Guardian Mobile Lab",
             body: "The contents of this notification should have been replaced. Please tell us about this!"
         }
