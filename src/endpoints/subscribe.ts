@@ -1,6 +1,7 @@
 import * as restify from 'restify';
 import * as fetch from 'node-fetch';
 import * as bunyan from 'bunyan';
+import {sendMessage, MessageSendType, MessageSendBody} from './send-message';
 
 function sendRequest(id:string, topicName:string, method:string, log:bunyan.Logger):Promise<boolean> {
     
@@ -40,6 +41,12 @@ export const subscribeOrUnsubscribe:restify.RequestHandler = function(req, res, 
 
     let topicName:string = req.params["topic_name"];
     let id = req.params["registration_id"];
+    let confirmationNotification = req.body["confirmation_notification"];
+    let serviceWorkerURL = req.body["service_worker_url"];
+
+    if (confirmationNotification && !serviceWorkerURL) {
+        throw new Error("If you provide a confirmation_notification you must also send the service_worker_url field.");
+    }
 
     let action = req.method == "POST" ? "subscribe" : "unsubscribe";
 
@@ -47,9 +54,28 @@ export const subscribeOrUnsubscribe:restify.RequestHandler = function(req, res, 
     
     return sendRequest(id, topicName, req.method, req.log)
     .then(() => {
-        res.json({
+
+        if (!confirmationNotification) {
+            return null;
+        }
+
+        let sendObj:MessageSendBody = {
+            payload: confirmationNotification,
+            ttl: 60,
+            priority: "high",
+            service_worker_url: serviceWorkerURL
+        }
+
+        return sendMessage(id, MessageSendType.Registration, sendObj, req.log);
+    })
+    .then((messageId) => {
+        let json:any = {
             subscribed: action === "subscribe"
-        })
+        };
+        if (messageId) {
+            json.confirmationNotificationId = messageId;
+        }
+        res.json(json);
     })
     .catch((err) => {
         next(err);

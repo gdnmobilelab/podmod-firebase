@@ -10,17 +10,28 @@ const errorMessages:any = {
     'priority': "You must provide a priority of 'high' or 'normal'. Normal prioritises battery, high is faster."
 }
 
-enum MessageSendType {
+export enum MessageSendType {
     Registration,
     Topic
 }
 
-function sendMessage(target:string, msgType: MessageSendType, body: any, log:bunyan.Logger):Promise<string> {
+export interface MessageSendBody {
+    service_worker_url: string;
+    payload: any;
+    ttl: number;
+    priority: 'high' | 'normal';
+
+    // This is used by Firebase to replace push notifications that are still pending
+    // Not required as it only allows up to 4 at a time.
+    collapse_key?: string
+}
+
+export function sendMessage(target:string, msgType: MessageSendType, body: MessageSendBody, log:bunyan.Logger):Promise<string> {
     
     let errors:string[] = [];
         
     for (let key in errorMessages) {
-        if (!body[key]) {
+        if (!(body as any)[key]) {
             errors.push(errorMessages[key]);
         }
     }
@@ -29,30 +40,16 @@ function sendMessage(target:string, msgType: MessageSendType, body: any, log:bun
         throw new RestifyError(400, errors.join(', '))
     }
 
-    let workerURL = body['service_worker_url'];
-    let payload = body['payload'];
-    let ttl = body['ttl'];
-
-    // This is used by Firebase to replace push notifications that are still pending
-    // Not required as it only allows up to 4 at a time.
-    let collapseKey = body['collapse_key'];
-
-    let priority = body['priority'];
-
-    if (priority !== 'high' && priority !== 'low') {
-        throw new RestifyError(400, "Priority value must be 'high' or 'low'.")
-    }
-
     let sendBody = {
         to: target,
-        collapse_key: collapseKey,
-        priority: priority,
+        collapse_key: body.collapse_key,
+        priority: body.priority,
         content_available: true,
-        time_to_live: ttl,
+        time_to_live: body.ttl,
         data: {
             send_time: Date.now(),
-            service_worker_url: workerURL,
-            payload: payload
+            service_worker_url: body.service_worker_url,
+            payload: body.payload
         },
         notification: {
             title: "An update from Guardian Mobile Lab",
@@ -65,6 +62,7 @@ function sendMessage(target:string, msgType: MessageSendType, body: any, log:bun
             'Authorization': `key=${process.env.FIREBASE_AUTH_KEY}`,
             'Content-Type': 'application/json'
         },
+        method: "POST",
         body: JSON.stringify(sendBody)
     })
     .then((res) => {
@@ -77,13 +75,13 @@ function sendMessage(target:string, msgType: MessageSendType, body: any, log:bun
     .then((finalId) => {
         log.info({
             result_id: finalId
-        }, "Successfully send message.");
+        }, "Successfully sent message.");
         return finalId
     })
     .catch((err) => {
         log.error({
             error: err.message
-        }, "Failed to send message");
+        }, "Failed to sent message");
         throw err;
     })
 }
@@ -94,6 +92,10 @@ interface SendResponseParser {
 
 const parseRegistrationResponse:SendResponseParser = function(res, log) {
     return res.json()
+    // .then((txt) => {
+    //     console.log(txt);
+    //     return res.json()
+    // })
     .then((json) => {
 
         let sendResult = json.results[0];
@@ -105,7 +107,7 @@ const parseRegistrationResponse:SendResponseParser = function(res, log) {
 
             throw new Error(sendResult.error);
         }
-        return sendResult.multicast_id;
+        return sendResult.message_id;
     })
 }
 

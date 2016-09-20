@@ -45,7 +45,7 @@ server.post("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiK
 server.del("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
 
 server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
-server.post("/registrations/:registraion_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
+server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
 
 server.listen(3000, function() {
     log.warn({action:"server-start", port: 3000}, "Server started.")
