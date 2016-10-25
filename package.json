@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node -r dotenv/config ./lib",
-    "migrate": "pg-migrate up"
+    "migrate": "pg-migrate up",
+    "prepublish": "tsc"
   },
   "author": "",
   "license": "ISC",
