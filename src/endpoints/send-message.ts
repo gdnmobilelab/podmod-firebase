@@ -43,6 +43,7 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
     let sendBody = {
         to: target,
         collapse_key: body.collapse_key,
+        // content_available: true,
         priority: body.priority,
         mutable_content: true,
         time_to_live: body.ttl,
@@ -52,7 +53,6 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
             payload: body.payload
         },
         notification: {
-            "mutable-content": 1,
             title: "An update from Guardian Mobile Lab",
             body: "The contents of this notification should have been replaced. Please tell us about this!"
         }
