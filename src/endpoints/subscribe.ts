@@ -41,13 +41,8 @@ export const subscribeOrUnsubscribe:restify.RequestHandler = function(req, res, 
 
     let topicName:string = req.params["topic_name"];
     let id = req.params["registration_id"];
-    let confirmationNotification = req.body["confirmation_notification"];
-    let serviceWorkerURL = req.body["service_worker_url"];
-
-    if (confirmationNotification && !serviceWorkerURL) {
-        throw new Error("If you provide a confirmation_notification you must also send the service_worker_url field.");
-    }
-
+    let confirmationNotification:MessageSendBody = req.body["confirmation_notification"];
+  
     let action = req.method == "POST" ? "subscribe" : "unsubscribe";
 
     req.log.info({action, topicName, id}, "Received request.");
@@ -59,16 +54,9 @@ export const subscribeOrUnsubscribe:restify.RequestHandler = function(req, res, 
             return null;
         }
 
-        let sendObj:MessageSendBody = {
-            payload: confirmationNotification,
-            ttl: 60,
-            priority: "high",
-            service_worker_url: serviceWorkerURL
-        }
-
-        return sendMessage(id, MessageSendType.Registration, sendObj, req.log);
+        return sendMessage(id, MessageSendType.Registration, confirmationNotification, req.log);
     })
-    .then((messageId) => {
+    .then((messageId:string) => {
         let json:any = {
             subscribed: action === "subscribe"
         };
@@ -77,7 +65,7 @@ export const subscribeOrUnsubscribe:restify.RequestHandler = function(req, res, 
         }
         res.json(json);
     })
-    .catch((err) => {
+    .catch((err:Error) => {
         next(err);
     })
     
