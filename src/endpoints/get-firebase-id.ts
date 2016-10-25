@@ -54,10 +54,14 @@ function getIdForiOSSubscription(sub:iOSSubscription): Promise<string> {
 
     let objToSend = {
         application: sub.bundle_name,
-        sandbox: process.env.NODE_ENV !== "production",
+        sandbox: false,
         apns_tokens: [
             sub.device_id
         ]
+    }
+
+    if (sub.sandbox === true) {
+        objToSend.sandbox = true;
     }
 
     return fetch("https://iid.googleapis.com/iid/v1:batchImport", {

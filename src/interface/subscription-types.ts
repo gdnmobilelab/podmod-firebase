@@ -2,6 +2,7 @@
 export interface iOSSubscription {
     device_id: string;
     bundle_name: string;
+    sandbox: boolean
 }
 
 export interface WebSubscription {
