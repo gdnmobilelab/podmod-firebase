@@ -39,6 +39,10 @@ function checkForKey(keyType:ApiKeyType):restify.RequestHandler {
 server.use(restify.bodyParser());
 server.use(restify.requestLogger());
 
+server.use(restify.CORS({
+    headers: ['authorization']
+}));
+
 server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);
 server.get("/registrations/:registration_id/topics", checkForKey(ApiKeyType.User), getSubscribed);
 server.post("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
