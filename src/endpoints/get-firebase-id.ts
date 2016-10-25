@@ -73,6 +73,11 @@ function getIdForiOSSubscription(sub:iOSSubscription): Promise<string> {
         if (json.error) {
             throw new Error(json.error);
         }
+
+        if (json.results[0].status !== "OK") {
+            throw new Error(json.results[0].status)
+        }
+
         return json.results[0].registration_token;
     })
 }
