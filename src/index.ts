@@ -61,5 +61,5 @@ server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToT
 server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
 
 server.listen(3000, function() {
-    log.warn({action:"server-start", port: 3000}, "Server started.")
+    log.warn({action:"server-start", port: 3000, env: process.env.NODE_ENV}, "Server started.")
 })
