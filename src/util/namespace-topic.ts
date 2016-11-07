@@ -1,4 +1,4 @@
 
 export function namespaceTopic(topicName:string):string {
-    return process.env.NODE_ENV + "__" + topicName
+    return "_" + process.env.NODE_ENV + "_" + topicName
 }

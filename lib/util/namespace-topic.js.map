@@ -1,1 +1,1 @@
-{"version":3,"file":"namespace-topic.js","sourceRoot":"","sources":["../../src/util/namespace-topic.ts"],"names":[],"mappings":";AACA,wBAA+B,SAAgB;IAC3C,MAAM,CAAC,OAAO,CAAC,GAAG,CAAC,QAAQ,GAAG,IAAI,GAAG,SAAS,CAAA;AAClD,CAAC;AAFe,sBAAc,iBAE7B,CAAA"}
+{"version":3,"file":"namespace-topic.js","sourceRoot":"","sources":["../../src/util/namespace-topic.ts"],"names":[],"mappings":";AACA,wBAA+B,SAAgB;IAC3C,MAAM,CAAC,GAAG,GAAG,OAAO,CAAC,GAAG,CAAC,QAAQ,GAAG,GAAG,GAAG,SAAS,CAAA;AACvD,CAAC;AAFe,sBAAc,iBAE7B,CAAA"}

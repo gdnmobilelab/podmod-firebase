@@ -57,7 +57,7 @@ function getIdForiOSSubscription(sub:iOSSubscription): Promise<string> {
         sandbox: false,
         apns_tokens: [
             sub.device_id
-        ]
+        ]   
     }
 
     if (sub.sandbox === true) {
