@@ -1,6 +1,7 @@
 import * as restify from 'restify';
 import * as fetch from 'node-fetch';
 import * as bunyan from 'bunyan';
+import {namespaceTopic} from '../util/namespace-topic';
 import {sendMessage, MessageSendType, MessageSendBody} from './send-message';
 
 function sendRequest(id:string, topicName:string, method:string, log:bunyan.Logger):Promise<boolean> {
@@ -39,7 +40,7 @@ function sendRequest(id:string, topicName:string, method:string, log:bunyan.Logg
 
 export const subscribeOrUnsubscribe:restify.RequestHandler = function(req, res, next) {
 
-    let topicName:string = req.params["topic_name"];
+    let topicName:string = namespaceTopic(req.params["topic_name"]);
     let id = req.params["registration_id"];
     let confirmationNotification:MessageSendBody = req.body["confirmation_notification"];
   

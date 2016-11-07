@@ -2,6 +2,7 @@ import * as restify from 'restify';
 import {RestifyError} from '../util/restify-error';
 import * as bunyan from 'bunyan';
 import * as fetch from 'node-fetch';
+import {namespaceTopic} from '../util/namespace-topic';
 
 const errorMessages:any = {
     'service_worker_url': "You must specify a service worker URL to receive the message (for iOS hybrid app)",
@@ -140,7 +141,7 @@ export const sendMessageToTopic:restify.RequestHandler = function(req, res, next
     Promise.resolve()
     .then(() => {
 
-        let topicName = req.params['topic_name'];
+        let topicName = namespaceTopic(req.params['topic_name']);
 
         req.log.info({
             target: topicName,
