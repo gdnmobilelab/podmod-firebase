@@ -1,5 +1,6 @@
 import * as restify from 'restify';
 import * as fetch from 'node-fetch';
+import {unnamespaceTopic} from '../util/namespace-topic';
 
 export const getSubscribed:restify.RequestHandler = function(req, res, next) {
     let id = req.params["registration_id"];
@@ -28,6 +29,10 @@ export const getSubscribed:restify.RequestHandler = function(req, res, next) {
             topics = Object.keys(json.rel.topics);
         }
 
-        res.json(topics);
+        let unnamespaced = topics.map(unnamespaceTopic);
+
+        let inThisEnvironment = unnamespaced.filter((n) => n.environment == process.env.NODE_ENV);
+
+        res.json(inThisEnvironment.map((n) => n.topicName));
     })
 }
