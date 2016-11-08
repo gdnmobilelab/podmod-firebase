@@ -11,9 +11,9 @@ interface TopicAndNamespace {
 export function unnamespaceTopic(namespacedTopicName:string):TopicAndNamespace {
     let split = namespacedTopicName.split("_");
     split.shift();
-    let topicName = split.shift();
+    let environment = split.shift();
     return {
-        topicName: topicName,
-        environment: split.join('_')
+        topicName: split.join('_'),
+        environment: environment
     }
 }
