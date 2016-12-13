@@ -2,6 +2,7 @@ import {WebSubscription, iOSSubscription} from '../interface/subscription-types'
 import * as fetch from 'node-fetch';
 import * as bunyan from 'bunyan';
 import * as restify from 'restify';
+import * as querystring from 'querystring';
 
 // We should have local cached copies of these rather than going to remote
 // all the time. But for now we're only using it on subscribe and unsubscribe,
@@ -21,12 +22,12 @@ function getIdForWebSubscription(sub:WebSubscription):Promise<string> {
     }
 
 
-    return fetch("https://jmt17.google.com/dev/fcm/connect/subscribe", {
+    return fetch("https://fcm.googleapis.com/fcm/connect/subscribe", {
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/x-www-form-urlencoded"
         },
         method: "POST",
-        body: JSON.stringify(objToSend)
+        body: querystring.stringify(objToSend)
     })
     .then((res) => res.json())
     .then((json) => {

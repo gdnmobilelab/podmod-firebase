@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node -r dotenv/config ./lib",
     "migrate": "pg-migrate up",
-    "prepublish": "tsc"
+    "prepublish": "tsc",
+    "production-start": "npm run migrate && node ./lib"
   },
   "author": "",
   "license": "ISC",

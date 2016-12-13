@@ -1,6 +1,6 @@
 
 export function namespaceTopic(topicName:string):string {
-    return "_" + process.env.NODE_ENV + "_" + topicName
+    return "_" + (process.env.NODE_ENV || 'development') + "_" + topicName
 }
 
 interface TopicAndNamespace {
