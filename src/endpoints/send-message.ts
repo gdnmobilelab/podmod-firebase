@@ -8,7 +8,13 @@ const errorMessages:any = {
     'service_worker_url': "You must specify a service worker URL to receive the message (for iOS hybrid app)",
     'payload': "You must specify a payload to be sent to the remote device.",
     'ttl': "You must provide a time to live value.",
-    'priority': "You must provide a priority of 'high' or 'normal'. Normal prioritises battery, high is faster."
+    'priority': "You must provide a priority of 'high' or 'normal'. Normal prioritises battery, high is faster.",
+    'ios' : "You must provide an 'ios' object with fallback notification content for iOS devices"
+}
+
+const iOSMessages:any = {
+    'title': "You must specify a title for the iOS fallback notification",
+    'body': "You must specify a body for the iOS fallback notification"
 }
 
 export enum MessageSendType {
@@ -16,46 +22,82 @@ export enum MessageSendType {
     Topic
 }
 
+export interface iOSFallbackNotification {
+    title: string;
+    body: string;
+    attachments: string[];
+    actions: string[];
+    collapse_id: string;
+}
+
 export interface MessageSendBody {
     service_worker_url: string;
     payload: any;
     ttl: number;
     priority: 'high' | 'normal';
+    ios: iOSFallbackNotification;
 
     // This is used by Firebase to replace push notifications that are still pending
     // Not required as it only allows up to 4 at a time.
     collapse_key?: string
 }
 
+function checkForErrors(objToCheck: any, errorTypes: any): string[] {
+
+    let errors:string[] = [];
+
+    for (let key in errorTypes) {
+        if (!objToCheck[key]) {
+            errors.push(errorTypes[key]);
+        }
+    }
+
+    return errors;
+}
+
 export function sendMessage(target:string, msgType: MessageSendType, body: MessageSendBody, log:bunyan.Logger):Promise<string> {
     
-    let errors:string[] = [];
-        
-    for (let key in errorMessages) {
-        if (!(body as any)[key]) {
-            errors.push(errorMessages[key]);
-        }
+    let errors = checkForErrors(body, errorMessages);
+
+    if (body.ios) {
+        errors = errors.concat(checkForErrors(body.ios, iOSMessages));
     }
 
     if (errors.length > 0) {
         throw new RestifyError(400, errors.join(', '))
     }
 
+    let iosAttachments:string = null;
+    let iosActions:string = null;
+
+    if (body.ios.attachments) {
+        // Firebase seems to send data as a string no matter what you do,
+        // so we might as well embrace it
+        iosAttachments = body.ios.attachments.join(',,,');
+    }
+
+    if (body.ios.actions) {
+        iosActions = body.ios.actions.join(',,,');
+    }
+
     let sendBody = {
         to: target,
         collapse_key: body.collapse_key,
-        // content_available: true,
+        content_available: true,
         priority: body.priority,
         mutable_content: true,
+        click_action: "extended-content",
         time_to_live: body.ttl,
         data: {
-            send_time: Date.now(),
+            send_time: String(Date.now()),
             service_worker_url: body.service_worker_url,
-            payload: body.payload
+            payload: body.payload,
+            ios_attachments: iosAttachments,
+            collapse_id: body.ios.collapse_id
         },
         notification: {
-            title: "An update from Guardian Mobile Lab",
-            body: "The contents of this notification should have been replaced. Please tell us about this!"
+            title: body.ios.title,
+            body: body.ios.body
         }
     }
 

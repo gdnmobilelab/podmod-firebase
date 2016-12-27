@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node -r dotenv/config ./lib",
+    "start": "tsc && node -r dotenv/config ./lib",
     "migrate": "pg-migrate up",
     "prepublish": "tsc",
     "production-start": "npm run migrate && node ./lib"
@@ -17,7 +17,8 @@
     "node-pg-migrate": "0.0.10",
     "pg": "^6.1.0",
     "pg-promise": "^5.3.3",
-    "restify": "^4.1.1"
+    "restify": "^4.1.1",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "typescript": "^1.8.10"
