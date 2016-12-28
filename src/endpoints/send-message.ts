@@ -28,6 +28,8 @@ export interface iOSFallbackNotification {
     attachments: string[];
     actions: string[];
     collapse_id: string;
+    silent: boolean;
+    renotify: boolean;
 }
 
 export interface MessageSendBody {
@@ -93,7 +95,9 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
             service_worker_url: body.service_worker_url,
             payload: body.payload,
             ios_attachments: iosAttachments,
-            collapse_id: body.ios.collapse_id
+            ios_collapse_id: body.ios.collapse_id,
+            ios_silent: String(body.ios.silent),
+            ios_renotify: String(body.ios.renotify)
         },
         notification: {
             title: body.ios.title,
