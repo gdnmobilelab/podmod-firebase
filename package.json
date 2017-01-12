@@ -7,7 +7,7 @@
     "start": "tsc && node -r dotenv/config ./lib",
     "migrate": "pg-migrate up",
     "prepublish": "tsc",
-    "production-start": "npm run migrate && node ./lib"
+    "production-start": "npm run migrate && NODE_ENV=production node ./lib"
   },
   "author": "",
   "license": "ISC",
