@@ -121,9 +121,13 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
     let errors:string[] = [];
 
     if (body.ios) {
-        if (parseIOSFromPayload === true) {
-            errors.push("Cannot specify iosFromPayload as well as an ios key in payload");
-        }
+
+        // Removing the below as the version of the webapp that ships with the App Store version
+        // currently does this, and we can't be 100% sure a user update will have succeeded.
+
+        // if (parseIOSFromPayload === true) {
+        //     errors.push("Cannot specify iosFromPayload as well as an ios key in payload");
+        // }
         errors = errors.concat(checkForErrors(body.ios, iOSMessages));
     } else if (parseIOSFromPayload) {
         

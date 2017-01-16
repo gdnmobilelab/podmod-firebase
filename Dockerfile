@@ -7,4 +7,6 @@ ADD package.json package.json
 RUN npm install
 RUN echo "" > .env
 
+EXPOSE 3000
+
 CMD npm run production-start
