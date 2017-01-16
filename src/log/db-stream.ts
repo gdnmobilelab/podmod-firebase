@@ -5,10 +5,9 @@ export class DbStream extends stream.Writable {
 
     client:pg.Client;
 
-    constructor() {
+    constructor(client:pg.Client) {
         super( {objectMode: true} );
-        this.client = new pg.Client(process.env.DATABASE_URL);
-        this.client.connect();
+        this.client = client;
     }
 
     _write(dataOriginal:any, encoding:String, cb:Function) {

@@ -3,6 +3,7 @@ import {RestifyError} from '../util/restify-error';
 import * as bunyan from 'bunyan';
 import * as fetch from 'node-fetch';
 import {namespaceTopic} from '../util/namespace-topic';
+import * as url from 'url';
 
 const errorMessages:any = {
     'service_worker_url': "You must specify a service worker URL to receive the message (for iOS hybrid app)",
@@ -57,13 +58,87 @@ function checkForErrors(objToCheck: any, errorTypes: any): string[] {
     return errors;
 }
 
-export function sendMessage(target:string, msgType: MessageSendType, body: MessageSendBody, log:bunyan.Logger):Promise<string> {
+function parseIOSNotificationFromPayload(payload: any) : iOSFallbackNotification {
     
-    let errors = checkForErrors(body, errorMessages);
+    if (!(payload instanceof Array)) {
+        throw new Error("Payload is not an array, can't parse out iOS arguments");
+    }
+    
+
+    let notificationShow = (payload as any[]).find((p) => p.command === "notification.show");
+
+    if (!notificationShow) {
+        throw new Error("There is no notification.show command in the payload to parse into iOS arguments");
+    }
+
+    let commandOptions = notificationShow.options;
+    let notificationOptions = commandOptions.options;
+    let collapsed = notificationOptions.collapsed || {};
+
+    let attachments: any[] = [];
+
+    if (notificationOptions.video && notificationOptions.video.preload === true) {
+        attachments.push(notificationOptions.video.url);
+    }
+
+    if (notificationOptions.image) {
+        attachments.push(notificationOptions.image);
+    }
+
+    let actions:any[] = [];
+
+    if (notificationOptions.actions) {
+        actions = actions.concat(notificationOptions.actions.map((a:any) => a.title));
+    }
+    if (commandOptions.actionCommands) {
+        actions = actions.concat(commandOptions.actionCommands.map((a:any) => a.template.title));
+    }
+
+    let collapseId:string = null;
+    if (notificationOptions.tag) {
+        collapseId = notificationOptions.tag;
+    }
+
+    let silent = !!notificationOptions.silent
+    let renotify = !!notificationOptions.renotify
+
+    let iosNotification:iOSFallbackNotification = {
+        title: collapsed.title || commandOptions.title,
+        body: collapsed.body || notificationOptions.body,
+        attachments: attachments,
+        actions: actions,
+        collapse_id: collapseId,
+        silent: silent,
+        renotify: renotify
+    };
+
+    return iosNotification;
+
+}
+
+export function sendMessage(target:string, msgType: MessageSendType, body: MessageSendBody, log:bunyan.Logger, parseIOSFromPayload:boolean):Promise<string> {
+    
+    let errors:string[] = [];
 
     if (body.ios) {
+        if (parseIOSFromPayload === true) {
+            errors.push("Cannot specify iosFromPayload as well as an ios key in payload");
+        }
         errors = errors.concat(checkForErrors(body.ios, iOSMessages));
+    } else if (parseIOSFromPayload) {
+        
+        // If we're using the lab's notification-commands library, we can parse out the notification being shown
+        // from the payload.
+
+        try {
+            body.ios = parseIOSNotificationFromPayload(body.payload);
+        } catch (err) {
+            errors.push(err.message);
+        }
+
     }
+
+    errors = errors.concat(checkForErrors(body, errorMessages));
 
     if (errors.length > 0) {
         throw new RestifyError(400, errors.join(', '))
@@ -186,7 +261,7 @@ export const sendMessageToTopic:restify.RequestHandler = function(req, res, next
     
     Promise.resolve()
     .then(() => {
-
+        let parseIOSFromPayload = url.parse(req.url, true).query.iosFromPayload === "true";
         let topicName = namespaceTopic(req.params['topic_name']);
 
         req.log.info({
@@ -195,7 +270,7 @@ export const sendMessageToTopic:restify.RequestHandler = function(req, res, next
             sendType: 'topic'
         }, "Received request to send message.")
 
-        return sendMessage(`/topics/${topicName}`, MessageSendType.Topic, req.body, req.log);
+        return sendMessage(`/topics/${topicName}`, MessageSendType.Topic, req.body, req.log, parseIOSFromPayload);
     })
     .then((finalId) => {
         res.json({
@@ -211,7 +286,8 @@ export const sendMessageToRegistration:restify.RequestHandler = function(req, re
     
     Promise.resolve()
     .then(() => {
-
+        
+        let parseIOSFromPayload = url.parse(req.url, true).query.iosFromPayload === "true";
         let registration = req.params['registration_id'];
 
         req.log.info({
@@ -220,7 +296,7 @@ export const sendMessageToRegistration:restify.RequestHandler = function(req, re
             sendType: 'registration'
         }, "Received request to send message.")
 
-        return sendMessage(registration, MessageSendType.Registration, req.body, req.log);
+        return sendMessage(registration, MessageSendType.Registration, req.body, req.log, parseIOSFromPayload);
     })
     .then((finalId) => {
         res.json({

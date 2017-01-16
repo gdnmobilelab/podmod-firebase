@@ -3,8 +3,10 @@ import {subscribeOrUnsubscribe} from './endpoints/subscribe';
 import {getFirebaseId} from './endpoints/get-firebase-id';
 import {getSubscribed} from './endpoints/get-subscribed';
 import {sendMessageToTopic, sendMessageToRegistration} from './endpoints/send-message';
+import {getSubscriberCount} from './endpoints/get-count';
 import log from './log/log';
 import {RestifyError} from './util/restify-error';
+import {client} from './util/db';
 
 const server = restify.createServer({
     log: log
@@ -59,7 +61,17 @@ server.del("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKe
 
 server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
 server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
+server.get("/topics/:topic_name/subscribers", checkForKey(ApiKeyType.Admin), getSubscriberCount);
 
-server.listen(3000, function() {
+let webListenPromise = new Promise((fulfill, reject) => {
+    server.listen(3000, fulfill);
+})
+
+let dbConnectPromise = new Promise((fulfill, reject) => {
+    client.connect(fulfill);
+})
+
+Promise.all([webListenPromise, dbConnectPromise])
+.then(() => {
     log.warn({action:"server-start", port: 3000, env: process.env.NODE_ENV}, "Server started.")
 })

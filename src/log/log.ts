@@ -3,12 +3,13 @@ import * as pg from 'pg';
 import * as stream from 'stream';
 import {DbStream} from './db-stream';
 import {SlackWebhook} from './slack-webhook';
+import {client} from '../util/db';
 
 const log = bunyan.createLogger({
     name: "pushkin-firebase"
 });
 
-let dbStream = new DbStream();
+let dbStream = new DbStream(client);
 
 log.addStream({
     level: 'debug',
