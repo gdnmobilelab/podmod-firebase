@@ -147,7 +147,7 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
     let iosAttachments:string = null;
     let iosActions:string = null;
 
-    if (body.ios.attachments) {
+    if (body.ios.attachments && body.ios.attachments.length > 0) {
         // Firebase seems to send data as a string no matter what you do,
         // so we might as well embrace it
         iosAttachments = body.ios.attachments.join(',,,');
@@ -170,6 +170,7 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
             service_worker_url: body.service_worker_url,
             payload: body.payload,
             ios_attachments: iosAttachments,
+            ios_actions: iosActions,
             ios_collapse_id: body.ios.collapse_id,
             ios_silent: String(body.ios.silent),
             ios_renotify: String(body.ios.renotify)
