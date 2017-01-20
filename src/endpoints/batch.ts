@@ -50,7 +50,7 @@ function processBatches(batches:any[][], topic:string, action: "subscribe" | "un
     return sendToFirebase(targetBatch, topic, action)
     .then((results) => {
         results.forEach((result:any, i:number) => {
-
+            result.id = targetBatch[i];
             if (result.error) {
                 log.error({error: result.error, id: targetBatch[i]}, "Operation failed for this ID");
             } else {
