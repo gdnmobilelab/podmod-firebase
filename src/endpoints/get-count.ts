@@ -6,12 +6,23 @@ export const getSubscriberCount:restify.RequestHandler = function(req, res, next
 
     let topic = namespaceTopic(req.params['topic_name']);
 
+    // Because batch operations affect multiple IDs in one request, we grab all of the
+    // requests that are subscribes or unsubscribes, then independently find all the IDs
+    // associated with that request. In most instances it's a one to one match, but not
+    // with batch operations.
+
     query(`
-        SELECT count(DISTINCT data->>'id') as number, data ->>'action' as action
-        FROM log_entries_grouped
-        WHERE (data->>'action' = 'unsubscribe' OR data->>'action' = 'subscribe')
-        AND data->>'topicName' = $1
-        GROUP BY data->>'action'  
+
+        SELECT COUNT (DISTINCT e.data->>'id') AS number, g.data->>'action' AS action
+        FROM log_entries_grouped AS g
+        INNER JOIN log_entries AS e
+            ON g.req_id = e.req_id
+            AND e.data->>'id' IS NOT NULL
+        WHERE g.data->>'action' IN ('subscribe', 'unsubscribe')
+        AND g.data->>'topicName' = $1
+        GROUP BY g.data->>'action'
+
+
     `, [topic])
     .then((rows) => {
 

@@ -145,6 +145,7 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
     errors = errors.concat(checkForErrors(body, errorMessages));
 
     if (errors.length > 0) {
+        log.error({errors}, "Failed to send message")
         throw new RestifyError(400, errors.join(', '))
     }
 
