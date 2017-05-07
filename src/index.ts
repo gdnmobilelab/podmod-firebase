@@ -1,13 +1,17 @@
 import * as restify from 'restify';
-import {subscribeOrUnsubscribe} from './endpoints/subscribe';
-import {getFirebaseId} from './endpoints/get-firebase-id';
-import {getSubscribed} from './endpoints/get-subscribed';
-import {sendMessageToTopic, sendMessageToRegistration} from './endpoints/send-message';
-import {getSubscriberCount} from './endpoints/get-count';
-import {batchOperation} from './endpoints/batch';
+import { subscribeOrUnsubscribe } from './endpoints/subscribe';
+import { getFirebaseId } from './endpoints/get-firebase-id';
+import { getSubscribed } from './endpoints/get-subscribed';
+import { sendMessageToTopic, sendMessageToRegistration } from './endpoints/send-message';
+import { getSubscriberCount } from './endpoints/get-count';
+import { batchOperation } from './endpoints/batch';
 import log from './log/log';
-import {RestifyError} from './util/restify-error';
-import {client} from './util/db';
+import { RestifyError } from './util/restify-error';
+import { client } from './util/db';
+
+if (!process.env.NODE_ENV) {
+    throw new Error("NODE_ENV environment variable is not set");
+}
 
 const server = restify.createServer({
     log: log
@@ -18,23 +22,23 @@ enum ApiKeyType {
     User
 }
 
-function checkForKey(keyType:ApiKeyType):restify.RequestHandler {
+function checkForKey(keyType: ApiKeyType): restify.RequestHandler {
     return (req, res, next) => {
-        
+
         let auth = req.headers.authorization;
 
         if (!auth) {
-            req.log.warn({url: req.url}, "Attempt to access endpoint without specifying API key.")
+            req.log.warn({ url: req.url }, "Attempt to access endpoint without specifying API key.")
             next(new RestifyError(401, "You must provide an API key in the Authorization field"));
         }
-        
+
         if (keyType === ApiKeyType.User && auth === process.env.USER_API_KEY) {
             return next();
         } else if (keyType === ApiKeyType.Admin && auth === process.env.ADMIN_API_KEY) {
             return next();
         } else {
-            req.log.warn({url: req.url, auth}, "Attempt to access endpoint with incorrect API key.")
-            next(new RestifyError(403,"Incorrect API key for this operation."));
+            req.log.warn({ url: req.url, auth }, "Attempt to access endpoint with incorrect API key.")
+            next(new RestifyError(403, "Incorrect API key for this operation."));
         }
     }
 }
@@ -53,8 +57,8 @@ server.opts(/\.*/, function (req, res, next) {
     let requestedHeaders = req.header("Access-Control-Request-Headers");
     res.setHeader("Access-Control-Allow-Headers", requestedHeaders);
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE");
-	res.send(200);
-	next();
+    res.send(200);
+    next();
 });
 
 server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);
@@ -78,6 +82,6 @@ let dbConnectPromise = new Promise((fulfill, reject) => {
 })
 
 Promise.all([webListenPromise, dbConnectPromise])
-.then(() => {
-    log.warn({action:"server-start", port: 3000, env: process.env.NODE_ENV}, "Server started.")
-})
+    .then(() => {
+        log.warn({ action: "server-start", port: 3000, env: process.env.NODE_ENV }, "Server started.")
+    })
