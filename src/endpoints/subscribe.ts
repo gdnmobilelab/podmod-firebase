@@ -55,7 +55,7 @@ export const subscribeOrUnsubscribe:restify.RequestHandler = function(req, res, 
             return null;
         }
 
-        return sendMessage(id, MessageSendType.Registration, confirmationNotification, req.log, true);
+        return sendMessage({registration: id}, MessageSendType.Registration, confirmationNotification, req.log, true);
     })
     .then((messageId:string) => {
         let json:any = {

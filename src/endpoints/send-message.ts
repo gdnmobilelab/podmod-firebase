@@ -116,7 +116,12 @@ function parseIOSNotificationFromPayload(payload: any) : iOSFallbackNotification
 
 }
 
-export function sendMessage(target:string, msgType: MessageSendType, body: MessageSendBody, log:bunyan.Logger, parseIOSFromPayload:boolean):Promise<string> {
+interface Target {
+    registration?: string;
+    topics?: string[];
+}
+
+export function sendMessage(target:Target, msgType: MessageSendType, body: MessageSendBody, log:bunyan.Logger, parseIOSFromPayload:boolean):Promise<string> {
     
     let errors:string[] = [];
 
@@ -163,7 +168,8 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
     }
 
     let sendBody = {
-        to: target,
+        to: undefined as any,
+        condition: undefined as any,
         collapse_key: body.collapse_key,
         content_available: true,
         priority: body.priority,
@@ -184,6 +190,17 @@ export function sendMessage(target:string, msgType: MessageSendType, body: Messa
             title: body.ios.title,
             body: body.ios.body
         }
+    }
+    if (target.registration) {
+        sendBody.to = target.registration;
+    } else if (target.topics.length === 1) {
+        sendBody.to = `/topics/${target.topics[0]}`;
+    } else if (target.topics) {
+        sendBody.condition = target.topics
+            .map((topic) => `'${topic}' in topics`)
+            .join('||');
+    } else {
+        throw new Error("Could not understand target");
     }
 
     return fetch('https://fcm.googleapis.com/fcm/send', {
@@ -268,15 +285,19 @@ export const sendMessageToTopic:restify.RequestHandler = function(req, res, next
     Promise.resolve()
     .then(() => {
         let parseIOSFromPayload = url.parse(req.url, true).query.iosFromPayload === "true";
-        let topicName = namespaceTopic(req.params['topic_name']);
+        let topicSelector = req.params['topic_name'];
+
+        let topics = topicSelector
+            .split("+")
+            .map(namespaceTopic);
 
         req.log.info({
-            target: topicName,
+            target: topics,
             action: 'send',
             sendType: 'topic'
         }, "Received request to send message.")
 
-        return sendMessage(`/topics/${topicName}`, MessageSendType.Topic, req.body, req.log, parseIOSFromPayload);
+        return sendMessage({topics}, MessageSendType.Topic, req.body, req.log, parseIOSFromPayload);
     })
     .then((finalId) => {
         res.json({
@@ -294,15 +315,15 @@ export const sendMessageToRegistration:restify.RequestHandler = function(req, re
     .then(() => {
         
         let parseIOSFromPayload = url.parse(req.url, true).query.iosFromPayload === "true";
-        let registration = req.params['registration_id'];
+        let registration = req.params['registration_id'] as string;
 
         req.log.info({
             target: registration,
             action: 'send',
             sendType: 'registration'
-        }, "Received request to send message.")
+        }, "Received request to send message.");
 
-        return sendMessage(registration, MessageSendType.Registration, req.body, req.log, parseIOSFromPayload);
+        return sendMessage({registration}, MessageSendType.Registration, req.body, req.log, parseIOSFromPayload);
     })
     .then((finalId) => {
         res.json({
