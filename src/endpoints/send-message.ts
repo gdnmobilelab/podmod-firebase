@@ -196,13 +196,14 @@ export function sendMessage(target:Target, msgType: MessageSendType, body: Messa
     } else if (target.topics.length === 1) {
         sendBody.to = `/topics/${target.topics[0]}`;
     } else if (target.topics) {
-        sendBody.condition = target.topics
+        sendBody.condition = "(" + target.topics
             .map((topic) => `'${topic}' in topics`)
-            .join('||');
+            .join(' || ') + ")";
     } else {
         throw new Error("Could not understand target");
     }
 
+  
     return fetch('https://fcm.googleapis.com/fcm/send', {
         headers: {
             'Authorization': `key=${process.env.FIREBASE_AUTH_KEY}`,
@@ -258,26 +259,34 @@ const parseRegistrationResponse:SendResponseParser = function(res, log) {
 }
 
 const parseTopicResponse:SendResponseParser = function(res, log) {
-    return res.json()
-    .then((json) => {
+    return res.text()
+    .then((text) => {
+        return Promise.resolve()
+        .then(() => {
+            let json = JSON.parse(text);
+            // Firebase has no topic "creation" - you just subscribe to anything. But
+            // that also means a send never fails, it just successfully sends to zero
+            // subscribers. So there's not a lot of tracking we can do here, nor can I
+            // simulate an error. So we'll just have to JSON stringify the response if
+            // it isn't what we're expecting.
 
-        // Firebase has no topic "creation" - you just subscribe to anything. But
-        // that also means a send never fails, it just successfully sends to zero
-        // subscribers. So there's not a lot of tracking we can do here, nor can I
-        // simulate an error. So we'll just have to JSON stringify the response if
-        // it isn't what we're expecting.
+            let messageId = json.message_id;
 
-        let messageId = json.message_id;
+            if (!messageId) {
+                log.error({
+                    response: json
+                }, "Unknown error occurred when parsing topic response.");
+                throw new Error("Unknown topic response error.");
+            }
 
-        if (!messageId) {
-            log.error({
-                response: json
-            }, "Unknown error occurred when parsing topic response.");
-            throw new Error("Unknown topic response error.");
-        }
-
-        return messageId;
-    })
+            return messageId;
+        })
+        .catch((err) => {
+            log.error({text}, "Could not parse JSON response");
+            throw new Error("JSON parse error");
+        })
+        
+    });
 }
 
 export const sendMessageToTopic:restify.RequestHandler = function(req, res, next) {
@@ -290,6 +299,11 @@ export const sendMessageToTopic:restify.RequestHandler = function(req, res, next
         let topics = topicSelector
             .split("+")
             .map(namespaceTopic);
+
+
+        if (topics.length > 1) {
+            throw new Error("Cannot send to multiple topics until we solve bug with Firebase");
+        }
 
         req.log.info({
             target: topics,
