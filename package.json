@@ -1,8 +1,8 @@
 {
-  "name": "pushkin-mod",
+  "name": "pushkin-firebase",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "start": "tsc && node -r dotenv/config ./lib",
     "migrate": "pg-migrate up",
@@ -12,14 +12,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/bunyan": "^1.8.4",
-    "@types/dotenv": "^4.0.2",
-    "@types/node": "^9.4.6",
-    "@types/node-fetch": "^1.6.7",
-    "@types/pg": "^7.4.4",
-    "@types/pg-promise": "^5.4.3",
-    "@types/restify": "^4.3.6",
-    "dotenv": "^2.0.0",
     "node-fetch": "^1.6.1",
     "node-pg-migrate": "0.0.10",
     "pg": "^6.1.0",
@@ -28,6 +20,14 @@
     "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "typescript": "^1.8.10"
+    "dotenv": "^2.0.0",
+    "@types/bunyan": "^1.8.4",
+    "@types/dotenv": "^4.0.2",
+    "@types/node": "^9.4.6",
+    "@types/node-fetch": "^1.6.7",
+    "@types/pg": "^7.4.4",
+    "@types/pg-promise": "^5.4.3",
+    "@types/restify": "^4.3.6",
+    "typescript": "^2.7.2"
   }
 }
