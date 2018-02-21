@@ -68,3 +68,8 @@ In either case, the server will start listening for requests on port 3000.
 #### Running in Docker
 
 An additional option is to run this in Docker - a `Dockerfile` is included in the repo to allow you to do just that. All you should need to do is set the appropriate environment variables.
+
+## Future improvements
+
+* tests(!!)
+* Rewrite to switch promises to async/await, to make the code more readable.
