@@ -1,50 +1,48 @@
-import * as pg from 'pg';
-import * as stream from 'stream';
+import * as pg from "pg";
+import * as stream from "stream";
 
 export class DbStream extends stream.Writable {
+  client: pg.Client;
 
-    client:pg.Client;
+  constructor(client: pg.Client) {
+    super({ objectMode: true });
+    this.client = client;
+  }
 
-    constructor(client:pg.Client) {
-        super( {objectMode: true} );
-        this.client = client;
-    }
+  _write(dataOriginal: any, encoding: String, cb: Function) {
+    let data = Object.assign({}, dataOriginal);
 
-    _write(dataOriginal:any, encoding:String, cb:Function) {
+    let specificFields = ["name", "pid", "hostname", "time", "level", "msg", "req_id", "v"];
+    let fieldData: any[] = [];
 
-        let data = Object.assign({}, dataOriginal);
+    specificFields.forEach(field => {
+      // if (field === "time") {
+      //     fieldData.push((data[field] as Date).getUTCDate())
+      // } else {
+      fieldData.push(data[field]);
+      // }
 
-        let specificFields = ["name", "pid", "hostname", "time", "level", "msg", "req_id","v"];
-        let fieldData:any[] = [];
+      delete data[field];
+    });
 
-        specificFields.forEach((field) => {
-            // if (field === "time") {
-            //     fieldData.push((data[field] as Date).getUTCDate())
-            // } else {
-                fieldData.push(data[field]);
-            // }
+    // Manually add the data field, as we
+    // didn't want to iterate over it earlier
 
-            delete data[field];
-        })
+    specificFields.push("data");
+    fieldData.push(data);
 
-        // Manually add the data field, as we
-        // didn't want to iterate over it earlier
+    let query =
+      "INSERT INTO log_entries (" +
+      specificFields.join(",") +
+      ") VALUES (" +
+      specificFields.map((item, i) => "$" + (i + 1)).join(",") +
+      ":: jsonb)";
 
-        specificFields.push("data");
-        fieldData.push(data);
-
-        let query = "INSERT INTO log_entries (" + 
-            specificFields.join(",") +
-            ") VALUES (" +
-            specificFields.map((item, i) => "$" + (i+1)).join(",")
-            + ":: jsonb)";
-
-        this.client.query(query, fieldData, (err, result) => {
-            if (err) {
-                console.error(err);
-            }
-            cb()
-        })
-
-    }
+    this.client.query(query, fieldData, (err, result) => {
+      if (err) {
+        console.error(err);
+      }
+      cb();
+    });
+  }
 }

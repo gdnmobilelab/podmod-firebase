@@ -13,11 +13,7 @@ function intoBatchesOf50(initialArray: any[]): any[][] {
   return returnArrays;
 }
 
-function sendToFirebase(
-  ids: any[],
-  topic: string,
-  action: "subscribe" | "unsubscribe"
-) {
+function sendToFirebase(ids: any[], topic: string, action: "subscribe" | "unsubscribe") {
   let endpoint = action == "subscribe" ? "batchAdd" : "batchRemove";
 
   let stringifiedBody = JSON.stringify({
@@ -60,39 +56,24 @@ function processBatches(
     results.forEach((result: any, i: number) => {
       result.id = targetBatch[i];
       if (result.error) {
-        log.error(
-          { error: result.error, id: targetBatch[i] },
-          "Operation failed for this ID"
-        );
+        log.error({ error: result.error, id: targetBatch[i] }, "Operation failed for this ID");
       } else {
         result.success = true;
         log.info({ id: targetBatch[i] }, "Operation succeeded for this ID");
       }
     });
     resultBatches.push(results);
-    return processBatches(
-      batches,
-      topic,
-      action,
-      log,
-      index + 1,
-      resultBatches
-    );
+    return processBatches(batches, topic, action, log, index + 1, resultBatches);
   });
 }
 
-export function batchOperation(
-  action: "subscribe" | "unsubscribe"
-): restify.RequestHandler {
+export function batchOperation(action: "subscribe" | "unsubscribe"): restify.RequestHandler {
   return function(req, res, next) {
     Promise.resolve()
       .then(() => {
         let topic = namespaceTopic(req.params["topic_name"]);
 
-        req.log.info(
-          { action, batch: true, topicName: topic },
-          "Received batch request"
-        );
+        req.log.info({ action, batch: true, topicName: topic }, "Received batch request");
 
         if (!(req.body instanceof Array)) {
           throw new Error("Must provide an array of IDs in the body");

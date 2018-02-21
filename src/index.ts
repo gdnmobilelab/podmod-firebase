@@ -2,10 +2,7 @@ import * as restify from "restify";
 import { subscribeOrUnsubscribe } from "./endpoints/subscribe";
 import { getFirebaseId } from "./endpoints/get-firebase-id";
 import { getSubscribed } from "./endpoints/get-subscribed";
-import {
-  sendMessageToTopic,
-  sendMessageToRegistration
-} from "./endpoints/send-message";
+import { sendMessageToTopic, sendMessageToRegistration } from "./endpoints/send-message";
 import { getSubscriberCount } from "./endpoints/get-count";
 import { batchOperation } from "./endpoints/batch";
 import log from "./log/log";
@@ -30,30 +27,16 @@ function checkForKey(keyType: ApiKeyType): restify.RequestHandler {
     let auth = req.headers.authorization;
 
     if (!auth) {
-      req.log.warn(
-        { url: req.url },
-        "Attempt to access endpoint without specifying API key."
-      );
-      next(
-        new RestifyError(
-          401,
-          "You must provide an API key in the Authorization field"
-        )
-      );
+      req.log.warn({ url: req.url }, "Attempt to access endpoint without specifying API key.");
+      next(new RestifyError(401, "You must provide an API key in the Authorization field"));
     }
 
     if (keyType === ApiKeyType.User && auth === process.env.USER_API_KEY) {
       return next();
-    } else if (
-      keyType === ApiKeyType.Admin &&
-      auth === process.env.ADMIN_API_KEY
-    ) {
+    } else if (keyType === ApiKeyType.Admin && auth === process.env.ADMIN_API_KEY) {
       return next();
     } else {
-      req.log.warn(
-        { url: req.url, auth },
-        "Attempt to access endpoint with incorrect API key."
-      );
+      req.log.warn({ url: req.url, auth }, "Attempt to access endpoint with incorrect API key.");
       next(new RestifyError(403, "Incorrect API key for this operation."));
     }
   };
@@ -82,11 +65,7 @@ server.opts(/\.*/, function(req, res, next) {
 });
 
 server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);
-server.get(
-  "/registrations/:registration_id/topics",
-  checkForKey(ApiKeyType.User),
-  getSubscribed
-);
+server.get("/registrations/:registration_id/topics", checkForKey(ApiKeyType.User), getSubscribed);
 server.post(
   "/topics/:topic_name/subscribers/:registration_id",
   checkForKey(ApiKeyType.User),
@@ -98,17 +77,9 @@ server.del(
   subscribeOrUnsubscribe
 );
 
-server.post(
-  "/topics/:topic_name",
-  checkForKey(ApiKeyType.Admin),
-  sendMessageToTopic
-);
+server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
 server.post("/registrations/:registration_id", sendMessageToRegistration);
-server.get(
-  "/topics/:topic_name/subscribers",
-  checkForKey(ApiKeyType.Admin),
-  getSubscriberCount
-);
+server.get("/topics/:topic_name/subscribers", checkForKey(ApiKeyType.Admin), getSubscriberCount);
 
 server.post(
   "/topics/:topic_name/batch/subscribe",
@@ -130,8 +101,5 @@ let dbConnectPromise = new Promise((fulfill, reject) => {
 });
 
 Promise.all([webListenPromise, dbConnectPromise]).then(() => {
-  log.warn(
-    { action: "server-start", port: 3000, env: process.env.NODE_ENV },
-    "Server started."
-  );
+  log.warn({ action: "server-start", port: 3000, env: process.env.NODE_ENV }, "Server started.");
 });

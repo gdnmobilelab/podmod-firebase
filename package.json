@@ -4,7 +4,7 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "start": "tsc && node -r dotenv/config ./lib",
+    "start": "tsc && node -r dotenv/config ./lib | bunyan",
     "migrate": "pg-migrate up",
     "prepublish": "tsc",
     "production-start": "npm run migrate && node ./lib"
@@ -12,6 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bunyan": "^1.8.12",
+    "dotenv": "^2.0.0",
     "node-fetch": "^1.6.1",
     "node-pg-migrate": "0.0.10",
     "pg": "^6.1.0",
@@ -20,7 +22,6 @@
     "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "dotenv": "^2.0.0",
     "@types/bunyan": "^1.8.4",
     "@types/dotenv": "^4.0.2",
     "@types/node": "^9.4.6",

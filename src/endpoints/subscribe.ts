@@ -4,22 +4,14 @@ import * as bunyan from "bunyan";
 import { namespaceTopic } from "../util/namespace-topic";
 import { sendMessage, MessageSendType, MessageSendBody } from "./send-message";
 
-function sendRequest(
-  id: string,
-  topicName: string,
-  method: string,
-  log: bunyan
-): Promise<boolean> {
-  return fetch(
-    `https://iid.googleapis.com/iid/v1/${id}/rel/topics/${topicName}`,
-    {
-      method: method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
-      }
+function sendRequest(id: string, topicName: string, method: string, log: bunyan): Promise<boolean> {
+  return fetch(`https://iid.googleapis.com/iid/v1/${id}/rel/topics/${topicName}`, {
+    method: method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
     }
-  )
+  })
     .then(res => {
       return res.json().then(json => {
         if (res.status != 200) {
@@ -49,15 +41,10 @@ function sendRequest(
     });
 }
 
-export const subscribeOrUnsubscribe: restify.RequestHandler = function(
-  req,
-  res,
-  next
-) {
+export const subscribeOrUnsubscribe: restify.RequestHandler = function(req, res, next) {
   let topicName: string = namespaceTopic(req.params["topic_name"]);
   let id = req.params["registration_id"];
-  let confirmationNotification: MessageSendBody =
-    req.body["confirmation_notification"];
+  let confirmationNotification: MessageSendBody = req.body["confirmation_notification"];
 
   let action = req.method == "POST" ? "subscribe" : "unsubscribe";
 

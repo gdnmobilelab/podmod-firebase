@@ -1,7 +1,4 @@
-import {
-  WebSubscription,
-  iOSSubscription
-} from "../interface/subscription-types";
+import { WebSubscription, iOSSubscription } from "../interface/subscription-types";
 import fetch from "node-fetch";
 import * as bunyan from "bunyan";
 import * as restify from "restify";
@@ -13,9 +10,7 @@ import * as querystring from "querystring";
 
 function getIdForWebSubscription(sub: WebSubscription): Promise<string> {
   if (!sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
-    throw new Error(
-      "Must send full notification payload in subscription object."
-    );
+    throw new Error("Must send full notification payload in subscription object.");
   }
 
   let objToSend = {

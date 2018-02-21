@@ -12,8 +12,7 @@ const errorMessages: any = {
   ttl: "You must provide a time to live value.",
   priority:
     "You must provide a priority of 'high' or 'normal'. Normal prioritises battery, high is faster.",
-  ios:
-    "You must provide an 'ios' object with fallback notification content for iOS devices"
+  ios: "You must provide an 'ios' object with fallback notification content for iOS devices"
 };
 
 const iOSMessages: any = {
@@ -60,16 +59,12 @@ function checkForErrors(objToCheck: any, errorTypes: any): string[] {
   return errors;
 }
 
-function parseIOSNotificationFromPayload(
-  payload: any
-): iOSFallbackNotification {
+function parseIOSNotificationFromPayload(payload: any): iOSFallbackNotification {
   if (!(payload instanceof Array)) {
     throw new Error("Payload is not an array, can't parse out iOS arguments");
   }
 
-  let notificationShow = (payload as any[]).find(
-    p => p.command === "notification.show"
-  );
+  let notificationShow = (payload as any[]).find(p => p.command === "notification.show");
 
   if (!notificationShow) {
     throw new Error(
@@ -94,14 +89,10 @@ function parseIOSNotificationFromPayload(
   let actions: any[] = [];
 
   if (notificationOptions.actions) {
-    actions = actions.concat(
-      notificationOptions.actions.map((a: any) => a.title)
-    );
+    actions = actions.concat(notificationOptions.actions.map((a: any) => a.title));
   }
   if (commandOptions.actionCommands) {
-    actions = actions.concat(
-      commandOptions.actionCommands.map((a: any) => a.template.title)
-    );
+    actions = actions.concat(commandOptions.actionCommands.map((a: any) => a.template.title));
   }
 
   let collapseId: string = null;
@@ -208,9 +199,7 @@ export function sendMessage(
     sendBody.to = `/topics/${target.topics[0]}`;
   } else if (target.topics) {
     sendBody.condition =
-      "(" +
-      target.topics.map(topic => `'${topic}' in topics`).join(" || ") +
-      ")";
+      "(" + target.topics.map(topic => `'${topic}' in topics`).join(" || ") + ")";
   } else {
     throw new Error("Could not understand target");
   }
@@ -310,23 +299,16 @@ const parseTopicResponse: SendResponseParser = function(res, log) {
   });
 };
 
-export const sendMessageToTopic: restify.RequestHandler = function(
-  req,
-  res,
-  next
-) {
+export const sendMessageToTopic: restify.RequestHandler = function(req, res, next) {
   Promise.resolve()
     .then(() => {
-      let parseIOSFromPayload =
-        url.parse(req.url, true).query.iosFromPayload === "true";
+      let parseIOSFromPayload = url.parse(req.url, true).query.iosFromPayload === "true";
       let topicSelector = req.params["topic_name"];
 
       let topics = topicSelector.split("+").map(namespaceTopic);
 
       if (topics.length > 1) {
-        throw new Error(
-          "Cannot send to multiple topics until we solve bug with Firebase"
-        );
+        throw new Error("Cannot send to multiple topics until we solve bug with Firebase");
       }
 
       req.log.info(
@@ -338,13 +320,7 @@ export const sendMessageToTopic: restify.RequestHandler = function(
         "Received request to send message."
       );
 
-      return sendMessage(
-        { topics },
-        MessageSendType.Topic,
-        req.body,
-        req.log,
-        parseIOSFromPayload
-      );
+      return sendMessage({ topics }, MessageSendType.Topic, req.body, req.log, parseIOSFromPayload);
     })
     .then(finalId => {
       res.json({
@@ -356,15 +332,10 @@ export const sendMessageToTopic: restify.RequestHandler = function(
     });
 };
 
-export const sendMessageToRegistration: restify.RequestHandler = function(
-  req,
-  res,
-  next
-) {
+export const sendMessageToRegistration: restify.RequestHandler = function(req, res, next) {
   Promise.resolve()
     .then(() => {
-      let parseIOSFromPayload =
-        url.parse(req.url, true).query.iosFromPayload === "true";
+      let parseIOSFromPayload = url.parse(req.url, true).query.iosFromPayload === "true";
       let registration = req.params["registration_id"] as string;
 
       req.log.info(
