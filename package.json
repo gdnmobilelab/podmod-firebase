@@ -7,7 +7,14 @@
     "start": "tsc && node -r dotenv/config ./lib | bunyan",
     "migrate": "pg-migrate up",
     "prepublish": "tsc",
-    "production-start": "npm run migrate && node ./lib"
+    "production-start": "npm run migrate && node ./lib",
+    "test":
+      "NODE_ENV=test mocha --require ts-node/register --require ./test/env.js \"test/**/*.ts\"",
+    "test-watch": "npm run test -- --watch --watch-extensions ts",
+    "create-test-db":
+      "docker run --name pushkin-test-db -p 127.0.0.1:54322:5432 -e POSTGRES_PASSWORD=PUSHKIN_PASS -d postgres",
+    "migrate-test-db": "node -r ./test/env.js node_modules/node-pg-migrate/bin/pg-migrate up",
+    "delete-test-db": "docker kill pushkin-test-db && docker rm pushkin-test-db"
   },
   "author": "",
   "license": "ISC",
@@ -23,12 +30,19 @@
   },
   "devDependencies": {
     "@types/bunyan": "^1.8.4",
+    "@types/chai": "^4.1.2",
     "@types/dotenv": "^4.0.2",
+    "@types/mocha": "^2.2.48",
+    "@types/nock": "^9.1.2",
     "@types/node": "^9.4.6",
     "@types/node-fetch": "^1.6.7",
     "@types/pg": "^7.4.4",
     "@types/pg-promise": "^5.4.3",
     "@types/restify": "^4.3.6",
+    "chai": "^4.1.2",
+    "mocha": "^5.0.4",
+    "nock": "^9.2.3",
+    "ts-node": "^5.0.1",
     "typescript": "^2.7.2"
   }
 }

@@ -9,20 +9,24 @@ const log = bunyan.createLogger({
   name: "pushkin-firebase"
 });
 
-let dbStream = new DbStream(client);
+if (process.env.NODE_ENV === "test") {
+  log.level(50);
+} else {
+  let dbStream = new DbStream(client);
 
-log.addStream({
-  level: "debug",
-  stream: dbStream,
-  type: "raw"
-});
-
-if (process.env.SLACK_WEBHOOK) {
   log.addStream({
-    level: "warn",
-    stream: new SlackWebhook(process.env.SLACK_WEBHOOK, dbStream),
+    level: "debug",
+    stream: dbStream,
     type: "raw"
   });
+
+  if (process.env.SLACK_WEBHOOK) {
+    log.addStream({
+      level: "warn",
+      stream: new SlackWebhook(process.env.SLACK_WEBHOOK, dbStream),
+      type: "raw"
+    });
+  }
 }
 
 export default log;
