@@ -1,1 +1,1 @@
-{"version":3,"file":"restify-error.js","sourceRoot":"","sources":["../../src/util/restify-error.ts"],"names":[],"mappings":";;AAAA,kBAA0B,SAAQ,KAAK;IAGnC,YAAY,UAAiB,EAAE,OAAc;QACzC,KAAK,CAAC,OAAO,CAAC,CAAC;QACf,IAAI,CAAC,UAAU,GAAG,UAAU,CAAC;IACjC,CAAC;CACJ;AAPD,oCAOC"}
+{"version":3,"file":"restify-error.js","sourceRoot":"","sources":["../../src/util/restify-error.ts"],"names":[],"mappings":";;AAAA,kBAA0B,SAAQ,KAAK;IAGrC,YAAY,UAAkB,EAAE,OAAe;QAC7C,KAAK,CAAC,OAAO,CAAC,CAAC;QACf,IAAI,CAAC,UAAU,GAAG,UAAU,CAAC;IAC/B,CAAC;CACF;AAPD,oCAOC"}

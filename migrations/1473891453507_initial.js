@@ -10,7 +10,7 @@ exports.up = function(pgm) {
         "v": {type: "int", notNull: true},
         "req_id": {type: "varchar"},
         "data": {type: "jsonb"}
-    });
+    }); 
 
     pgm.sql(`
         CREATE OR REPLACE FUNCTION jsonb_merge_state(jsonb, jsonb)
