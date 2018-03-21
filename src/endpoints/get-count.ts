@@ -1,8 +1,7 @@
-import * as restify from "restify";
-import { query } from "../util/db";
+import { DbEnabledRequestHandler } from "../util/db";
 import { namespaceTopic } from "../util/namespace-topic";
 
-export const getSubscriberCount: restify.RequestHandler = function(req, res, next) {
+export const getSubscriberCount: DbEnabledRequestHandler = function(req, res, next) {
   let topic = namespaceTopic(req.params["topic_name"]);
 
   // Because batch operations affect multiple IDs in one request, we grab all of the
@@ -10,8 +9,9 @@ export const getSubscriberCount: restify.RequestHandler = function(req, res, nex
   // associated with that request. In most instances it's a one to one match, but not
   // with batch operations.
 
-  query(
-    `
+  req.db
+    .query(
+      `
 
         SELECT COUNT (DISTINCT e.data->>'id') AS number, g.data->>'action' AS action
         FROM log_entries_grouped AS g
@@ -24,8 +24,8 @@ export const getSubscriberCount: restify.RequestHandler = function(req, res, nex
 
 
     `,
-    [topic]
-  )
+      [topic]
+    )
     .then(rows => {
       let subscribers = 0;
       let unsubscribers = 0;

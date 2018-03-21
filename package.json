@@ -8,11 +8,9 @@
     "migrate": "pg-migrate up",
     "prepublish": "tsc",
     "production-start": "npm run migrate && node ./lib",
-    "test":
-      "NODE_ENV=test mocha --require ts-node/register --require ./test/env.js \"test/**/*.ts\"",
+    "test": "NODE_ENV=test mocha --require ts-node/register --require ./test/env.js \"test/**/*.ts\"",
     "test-watch": "npm run test -- --watch --watch-extensions ts",
-    "create-test-db":
-      "docker run --name pushkin-test-db -p 127.0.0.1:54322:5432 -e POSTGRES_PASSWORD=PUSHKIN_PASS -d postgres",
+    "create-test-db": "docker run --name pushkin-test-db -p 127.0.0.1:54322:5432 -e POSTGRES_PASSWORD=PUSHKIN_PASS -d postgres",
     "migrate-test-db": "node -r ./test/env.js node_modules/node-pg-migrate/bin/pg-migrate up",
     "delete-test-db": "docker kill pushkin-test-db && docker rm pushkin-test-db"
   },
@@ -23,6 +21,7 @@
     "dotenv": "^2.0.0",
     "node-fetch": "^1.6.1",
     "node-pg-migrate": "0.0.10",
+    "npm": "^5.7.1",
     "pg": "^6.1.0",
     "pg-promise": "^5.3.3",
     "restify": "^4.1.1",

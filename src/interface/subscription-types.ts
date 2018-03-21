@@ -6,6 +6,7 @@ export interface iOSSubscription {
 
 export interface WebSubscription {
   endpoint: string;
+  expirationTime?: any;
   keys: {
     p256dh: string;
     auth: string;
