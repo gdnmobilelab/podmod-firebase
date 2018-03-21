@@ -17,6 +17,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/restify-cors-middleware": "^1.0.1",
     "bunyan": "^1.8.12",
     "dotenv": "^2.0.0",
     "node-fetch": "^1.6.1",
@@ -25,6 +26,7 @@
     "pg": "^6.1.0",
     "pg-promise": "^5.3.3",
     "restify": "^4.1.1",
+    "restify-cors-middleware": "^1.1.0",
     "uuid": "^3.0.1"
   },
   "devDependencies": {

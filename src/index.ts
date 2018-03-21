@@ -1,10 +1,11 @@
 import * as restify from "restify";
+import * as restifyCORS from "restify-cors-middleware";
 import { subscribeOrUnsubscribe } from "./endpoints/subscribe";
 import { getFirebaseId } from "./endpoints/get-firebase-id";
 import { getSubscribed } from "./endpoints/get-subscribed";
 import { sendMessageToTopic, sendMessageToRegistration } from "./endpoints/send-message";
 import { getSubscriberCount } from "./endpoints/get-count";
-import { batchOperation } from "./endpoints/batch";
+// import { batchOperation } from "./endpoints/batch";
 import { createLogger } from "./log/log";
 import { RestifyError } from "./util/restify-error";
 import { createClient as createDatabaseClient, addClientToRequest } from "./util/db";
@@ -20,29 +21,37 @@ export async function createServer(): Promise<() => void> {
 
   const server = restify.createServer({ log });
 
+  // In almost all instances we're going to be running this on a different subdomain
+  // than the pages actually calling the API. So we need to allow CORS requests, but
+  // should also ensure we limit it to appropriate origins when deploying to staging
+  // or production environments.
+
+  if (process.env.NODE_ENV !== "dev" && !process.env.ALLOWED_ORIGINS) {
+    log.warn("Starting server without restricted CORS origins");
+  }
+
+  const cors = restifyCORS({
+    origins: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : ["*"],
+    allowHeaders: ["API-Token"],
+    exposeHeaders: ["API-Token-Expiry"]
+  });
+
+  // pre() calls are run before any route matching. In this case, it ensures that any
+  // OPTIONS request gets the correct CORS response, irrespective of whether we have a matching
+  // route.
+
+  server.pre(cors.preflight);
+
+  // use() on the other hand only runs on requests that have matching routes.
+
   server.use(
     restify.bodyParser({
       mapParams: false
-    })
+    }),
+    restify.requestLogger(),
+    cors.actual,
+    addClientToRequest(client)
   );
-  server.use(restify.requestLogger());
-
-  server.use(
-    restify.CORS({
-      headers: ["authorization"]
-    })
-  );
-
-  server.use(addClientToRequest(client));
-
-  server.opts(/\.*/, function(req, res, next) {
-    // for CORS
-    let requestedHeaders = req.header("Access-Control-Request-Headers");
-    res.setHeader("Access-Control-Allow-Headers", requestedHeaders);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE");
-    res.send(200);
-    next();
-  });
 
   server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);
   server.get("/registrations/:registration_id/topics", checkForKey(ApiKeyType.User), getSubscribed);
@@ -53,11 +62,23 @@ export async function createServer(): Promise<() => void> {
   server.post("/registrations/:registration_id", sendMessageToRegistration);
   server.get("/topics/:topic_name/subscribers", checkForKey(ApiKeyType.Admin), getSubscriberCount);
 
-  server.post("/topics/:topic_name/batch/subscribe", checkForKey(ApiKeyType.Admin), batchOperation("subscribe"));
-  server.post("/topics/:topic_name/batch/unsubscribe", checkForKey(ApiKeyType.Admin), batchOperation("unsubscribe"));
+  // server.post("/topics/:topic_name/batch/subscribe", checkForKey(ApiKeyType.Admin), batchOperation("subscribe"));
+  // server.post("/topics/:topic_name/batch/unsubscribe", checkForKey(ApiKeyType.Admin), batchOperation("unsubscribe"));
+
+  let port = 3000;
+
+  if (process.env.SERVER_PORT) {
+    let parsedNumber = parseInt(process.env.SERVER_PORT, 10);
+    if (isNaN(parsedNumber)) {
+      throw new Error("Could not parse provided port as a number: " + process.env.SERVER_PORT);
+    }
+    port = parsedNumber;
+  }
+
+  // Both the pg and restify connection functions take callbacks, so we need to promisify them:
 
   let webListenPromise = new Promise((fulfill, reject) => {
-    server.listen(3000, fulfill);
+    server.listen(port, fulfill);
   });
 
   let dbConnectPromise = new Promise((fulfill, reject) => {
@@ -71,9 +92,9 @@ export async function createServer(): Promise<() => void> {
   });
 
   try {
+    // If we can't successfully connect to the database or listen on the specified port, crash out.
     await Promise.all([webListenPromise, dbConnectPromise]);
-
-    log.warn({ action: "server-start", port: 3000, env: process.env.NODE_ENV }, "Server started.");
+    log.warn({ action: "server-start", port, env: process.env.NODE_ENV }, "Server started.");
   } catch (err) {
     log.error({ error: err.message }, "Server failed to start");
     throw err;
