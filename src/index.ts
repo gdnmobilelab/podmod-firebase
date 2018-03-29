@@ -50,6 +50,8 @@ export async function createServer(): Promise<() => void> {
     }),
     restify.requestLogger(),
     cors.actual,
+    // make our database client available on req.db. Most DB stuff goes through req.log() but
+    // not all
     addClientToRequest(client)
   );
 
@@ -59,7 +61,7 @@ export async function createServer(): Promise<() => void> {
   server.del("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
 
   server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
-  server.post("/registrations/:registration_id", sendMessageToRegistration);
+  server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
   server.get("/topics/:topic_name/subscribers", checkForKey(ApiKeyType.Admin), getSubscriberCount);
 
   // server.post("/topics/:topic_name/batch/subscribe", checkForKey(ApiKeyType.Admin), batchOperation("subscribe"));
@@ -99,6 +101,9 @@ export async function createServer(): Promise<() => void> {
     log.error({ error: err.message }, "Server failed to start");
     throw err;
   }
+
+  // This could probably be more intuitive, but createServer() returns a function which, when run,
+  // closes the server. We're only using this in tests so this is probably fine for now.
 
   return async function() {
     await Promise.all([new Promise(fulfill => client.end(fulfill)), new Promise(fulfill => server.close(fulfill))]);
