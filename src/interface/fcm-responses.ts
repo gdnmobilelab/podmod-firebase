@@ -38,3 +38,11 @@ export interface FCMiOSBatchRegistrationResponse {
   error?: FCMError;
   results?: FCMiOSRegistrationResponse[];
 }
+
+// {
+// 	"error": "InvalidToken"
+// }
+
+export interface FCMTopicSubscribeResponse {
+  error?: string;
+}

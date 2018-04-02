@@ -10,6 +10,7 @@ import { createLogger } from "./log/log";
 import { RestifyError } from "./util/restify-error";
 import { createClient as createDatabaseClient, addClientToRequest } from "./util/db";
 import { checkForKey, ApiKeyType } from "./security/key-check";
+import { JWT } from "google-auth-library";
 
 if (!process.env.NODE_ENV) {
   throw new Error("NODE_ENV environment variable is not set");
@@ -20,6 +21,19 @@ export async function createServer(): Promise<() => void> {
   const log = createLogger(client);
 
   const server = restify.createServer({ log });
+
+  // Annoying, some of our Firebase operations require the server key, whereas others
+  // require a JWT token. We create an instance of the JWT token here, then add it to
+  // the request object for use later.
+
+  // dotenv doesn't parse out newlines, so we need to do a manual replace
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
+
+  let jwt = new JWT(process.env.FIREBASE_CLIENT_EMAIL, null, privateKey, [
+    "https://www.googleapis.com/auth/firebase.messaging"
+  ]);
+
+  await jwt.authorize();
 
   // In almost all instances we're going to be running this on a different subdomain
   // than the pages actually calling the API. So we need to allow CORS requests, but
@@ -52,7 +66,7 @@ export async function createServer(): Promise<() => void> {
     cors.actual,
     // make our database client available on req.db. Most DB stuff goes through req.log() but
     // not all
-    addClientToRequest(client)
+    addClientToRequest(client, jwt)
   );
 
   server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);

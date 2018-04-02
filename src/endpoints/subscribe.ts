@@ -30,7 +30,7 @@ function sendRequest(id: string, topicName: string, method: string, log: bunyan)
       return true;
     })
     .catch(err => {
-      log.error(
+      log.warn(
         {
           method: method,
           error: err.message
@@ -56,13 +56,7 @@ export const subscribeOrUnsubscribe: restify.RequestHandler = function(req, res,
         return null;
       }
 
-      return sendMessage(
-        { registration: id },
-        MessageSendType.Registration,
-        confirmationNotification,
-        req.log,
-        true
-      );
+      return sendMessage({ registration: id }, MessageSendType.Registration, confirmationNotification, req.log);
     })
     .then((messageId: string) => {
       let json: any = {
