@@ -2,6 +2,7 @@ import * as pg from "pg";
 import * as restify from "restify";
 import { JWT } from "google-auth-library";
 import { PushkinRequest, PushkinRequestHandler } from "./request-handler";
+import Environment from "./env";
 
 // As mentioned here:
 // https://github.com/brianc/node-pg-types
@@ -9,7 +10,7 @@ import { PushkinRequest, PushkinRequestHandler } from "./request-handler";
 pg.types.setTypeParser(20, val => parseInt(val, 10));
 
 export function createClient() {
-  return new pg.Client(process.env.DATABASE_URL);
+  return new pg.Client(Environment.DATABASE_URL);
 }
 
 export function addClientToRequest(client: pg.Client, jwt: JWT) {

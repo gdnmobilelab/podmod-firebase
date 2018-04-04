@@ -4,6 +4,7 @@ import { Client } from "pg";
 import * as ChildProcess from "child_process";
 import * as sinon from "sinon";
 import * as GoogleAuth from "google-auth-library";
+import { check as checkEnvironmentVariables } from "../src/util/env";
 
 require("dotenv").config({ path: __dirname + "/test.env" });
 
@@ -19,6 +20,7 @@ let globalStore: {
 let jwt: sinon.SinonStub;
 
 before(async function() {
+  checkEnvironmentVariables();
   jwt = sinon.stub(GoogleAuth, "JWT").returns({
     getAccessToken() {
       return Promise.resolve({ token: "TEST_TOKEN" });

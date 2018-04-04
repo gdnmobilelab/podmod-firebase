@@ -2,6 +2,7 @@ import { WebSubscription, iOSSubscription } from "../interface/subscription-type
 import { FCMError, FCMWebRegistrationResponse, FCMiOSBatchRegistrationResponse } from "../interface/fcm-responses";
 import fetch from "node-fetch";
 import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
+import Environment from "../util/env";
 
 // API documentation for this:
 // https://developers.google.com/instance-id/reference/server#create_relationship_maps_for_app_instances
@@ -23,7 +24,7 @@ async function getIdForWebSubscription(sub: WebSubscription): Promise<string> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
+      Authorization: `key=${Environment.FIREBASE_AUTH_KEY}`
     },
     body: JSON.stringify(subscriptionToSend)
   });
@@ -66,7 +67,7 @@ async function getIdForiOSSubscription(sub: iOSSubscription, req: PushkinRequest
   let res = await fetch("https://iid.googleapis.com/iid/v1:batchImport", {
     headers: {
       "Content-Type": "application/json",
-      Authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
+      Authorization: `key=${Environment.FIREBASE_AUTH_KEY}`
     },
     method: "POST",
     body: JSON.stringify(objToSend)

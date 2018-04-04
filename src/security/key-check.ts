@@ -1,6 +1,6 @@
 import * as restify from "restify";
 import { ForbiddenError } from "restify-errors";
-// import { RestifyError } from "../util/restify-error";
+import Environment from "../util/env";
 
 export enum ApiKeyType {
   Admin,
@@ -16,9 +16,9 @@ export function checkForKey(keyType: ApiKeyType): restify.RequestHandler {
       next(new ForbiddenError("You must provide an API key in the Authorization field"));
     }
 
-    if (keyType === ApiKeyType.User && auth === process.env.USER_API_KEY) {
+    if (keyType === ApiKeyType.User && auth === Environment.USER_API_KEY) {
       return next();
-    } else if (keyType === ApiKeyType.Admin && auth === process.env.ADMIN_API_KEY) {
+    } else if (keyType === ApiKeyType.Admin && auth === Environment.ADMIN_API_KEY) {
       return next();
     } else {
       req.log.warn({ url: req.url, auth }, "Attempt to access endpoint with incorrect API key.");

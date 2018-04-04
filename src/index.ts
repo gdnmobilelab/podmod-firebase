@@ -3,15 +3,16 @@ import * as restifyCORS from "restify-cors-middleware";
 import { subscribeOrUnsubscribe } from "./endpoints/subscribe";
 import { getFirebaseId } from "./endpoints/get-firebase-id";
 import { getSubscribed } from "./endpoints/get-subscribed";
-import { sendMessageToRegistration } from "./endpoints/send-message";
+import { sendMessageToRegistration, sendMessageToTopic } from "./endpoints/send-message";
 import { getTopicDetails } from "./endpoints/topic-details";
 // import { batchOperation } from "./endpoints/batch";
 import { createLogger } from "./log/log";
 import { createClient as createDatabaseClient, addClientToRequest } from "./util/db";
 import { checkForKey, ApiKeyType } from "./security/key-check";
 import { JWT } from "google-auth-library";
+import Environment, { check as checkEnvironmentVariables } from "./util/env";
 
-if (!process.env.NODE_ENV) {
+if (!Environment.NODE_ENV) {
   throw new Error("NODE_ENV environment variable is not set");
 }
 
@@ -26,9 +27,9 @@ export async function createServer(): Promise<() => void> {
   // the request object for use later.
 
   // dotenv doesn't parse out newlines, so we need to do a manual replace
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
+  const privateKey = Environment.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
 
-  let jwt = new JWT(process.env.FIREBASE_CLIENT_EMAIL, null, privateKey, [
+  let jwt = new JWT(Environment.FIREBASE_CLIENT_EMAIL, null, privateKey, [
     "https://www.googleapis.com/auth/firebase.messaging"
   ]);
 
@@ -39,12 +40,12 @@ export async function createServer(): Promise<() => void> {
   // should also ensure we limit it to appropriate origins when deploying to staging
   // or production environments.
 
-  if (process.env.NODE_ENV !== "dev" && !process.env.ALLOWED_ORIGINS) {
+  if (Environment.NODE_ENV !== "dev" && !Environment.ALLOWED_ORIGINS) {
     log.warn("Starting server without restricted CORS origins");
   }
 
   const cors = restifyCORS({
-    origins: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : ["*"],
+    origins: Environment.ALLOWED_ORIGINS ? Environment.ALLOWED_ORIGINS.split(",") : ["*"],
     allowHeaders: ["API-Token"],
     exposeHeaders: ["API-Token-Expiry"]
   });
@@ -73,7 +74,7 @@ export async function createServer(): Promise<() => void> {
   server.post("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
   server.del("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
 
-  // server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
+  server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
   server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
   server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
 
@@ -82,10 +83,10 @@ export async function createServer(): Promise<() => void> {
 
   let port = 3000;
 
-  if (process.env.SERVER_PORT) {
-    let parsedNumber = parseInt(process.env.SERVER_PORT, 10);
+  if (Environment.SERVER_PORT) {
+    let parsedNumber = parseInt(Environment.SERVER_PORT, 10);
     if (isNaN(parsedNumber)) {
-      throw new Error("Could not parse provided port as a number: " + process.env.SERVER_PORT);
+      throw new Error("Could not parse provided port as a number: " + Environment.SERVER_PORT);
     }
     port = parsedNumber;
   }
@@ -109,7 +110,7 @@ export async function createServer(): Promise<() => void> {
   try {
     // If we can't successfully connect to the database or listen on the specified port, crash out.
     await Promise.all([webListenPromise, dbConnectPromise]);
-    log.warn({ action: "server-start", port, env: process.env.NODE_ENV }, "Server started.");
+    log.warn({ action: "server-start", port, env: Environment.NODE_ENV }, "Server started.");
   } catch (err) {
     log.error({ error: err.message }, "Server failed to start");
     throw err;
@@ -126,5 +127,6 @@ export async function createServer(): Promise<() => void> {
 }
 
 if (require.main === module) {
+  checkEnvironmentVariables();
   createServer();
 }

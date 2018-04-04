@@ -6,13 +6,14 @@ import { PushkinRequestHandler } from "../util/request-handler";
 import { BadRequestError, InternalServerError } from "restify-errors";
 import { FCMTokenMessage, FCMMessage } from "../interface/fcm-requests";
 import { sendMessage } from "./send-message";
+import Environment from "../util/env";
 
 async function sendRequest(id: string, topicName: string, method: string, log: bunyan): Promise<boolean> {
   let res = await fetch(`https://iid.googleapis.com/iid/v1/${id}/rel/topics/${topicName}`, {
     method: method,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
+      Authorization: `key=${Environment.FIREBASE_AUTH_KEY}`
     }
   });
 
