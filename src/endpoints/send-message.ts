@@ -6,7 +6,7 @@ import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
 import { FCMMessage, FCMTokenMessage, MessageSendRequest, FCMTopicMessage } from "../interface/fcm-requests";
 import { FCMSendMessageResponse } from "../interface/fcm-responses";
 import { Validator } from "jsonschema";
-import Validators from "../../validators/validators";
+import Validators from "../validators/validators";
 import Environment from "../util/env";
 import { join } from "path";
 import { ValidationFailedError } from "../util/errors";

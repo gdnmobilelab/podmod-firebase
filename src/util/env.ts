@@ -1,5 +1,5 @@
 import { EnvironmentVariables } from "../interface/env";
-import Validation from "../../validators/validators";
+import Validation from "../validators/validators";
 import { validate } from "jsonschema";
 
 export function check() {

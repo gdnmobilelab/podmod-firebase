@@ -10,7 +10,7 @@
     "production-start": "npm run migrate && node ./lib",
     "test": "NODE_ENV=test mocha --require ts-node/register \"test/**/*.ts\"",
     "test-watch": "npm run test -- --watch --watch-extensions ts",
-    "build-interface-validation": "mkdir -p validators && ts-node ./build-validators.ts"
+    "build-interface-validation": "mkdir -p src/validators && ts-node ./build-validators.ts"
   },
   "author": "",
   "license": "ISC",

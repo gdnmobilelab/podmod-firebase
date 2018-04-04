@@ -103,6 +103,12 @@
         },
         "FCM_PROJECT": {
           "type": "string"
+        },
+        "ALLOWED_ORIGINS": {
+          "type": "string"
+        },
+        "SERVER_PORT": {
+          "type": "string"
         }
       },
       "required": [
