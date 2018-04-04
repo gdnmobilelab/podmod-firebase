@@ -3,11 +3,12 @@ import { FCMError, FCMWebRegistrationResponse, FCMiOSBatchRegistrationResponse }
 import fetch from "node-fetch";
 import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
 import Environment from "../util/env";
+import { BadRequestError } from "restify-errors";
 
 // API documentation for this:
 // https://developers.google.com/instance-id/reference/server#create_relationship_maps_for_app_instances
 
-async function getIdForWebSubscription(sub: WebSubscription): Promise<string> {
+async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest): Promise<string> {
   if (!sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
     throw new Error("Must send full notification payload in subscription object.");
   }
@@ -20,17 +21,20 @@ async function getIdForWebSubscription(sub: WebSubscription): Promise<string> {
     keys: sub.keys
   };
 
-  let response = await fetch("https://iid.googleapis.com/v1/web/iid", {
+  let token = await req.jwt.getAccessToken();
+  console.log(`key=${Environment.FIREBASE_AUTH_KEY}`, subscriptionToSend);
+  let response = await fetch("http://iid.googleapis.com/v1/web/iid", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `key=${Environment.FIREBASE_AUTH_KEY}`
+      // Authorization: "Bearer " + token
     },
     body: JSON.stringify(subscriptionToSend)
   });
 
   let json = (await response.json()) as FCMWebRegistrationResponse;
-
+  console.log(json);
   if (json.error as FCMError) {
     throw new Error(json.error.message);
   }
@@ -107,11 +111,11 @@ export const getFirebaseId: PushkinRequestHandler<FirebaseIDRequestBody, void> =
     let firebaseID: string;
 
     if (!req.body.subscription.platform) {
-      firebaseID = await getIdForWebSubscription(req.body.subscription as WebSubscription);
+      firebaseID = await getIdForWebSubscription(req.body.subscription as WebSubscription, req);
     } else if (req.body.subscription.platform === "iOS") {
       firebaseID = await getIdForiOSSubscription(req.body.subscription as iOSSubscription, req);
     } else {
-      throw new Error("Unrecognised notification platform.");
+      throw new BadRequestError("Unrecognised notification platform.");
     }
 
     req.log.info(
@@ -125,7 +129,7 @@ export const getFirebaseId: PushkinRequestHandler<FirebaseIDRequestBody, void> =
   } catch (err) {
     req.log.error(
       {
-        subscription: req.body.subscription,
+        subscription: req.body ? req.body.subscription : undefined,
         error: err.message
       },
       "Failed to get Firebase ID for subscription."

@@ -28,10 +28,13 @@ export async function createServer(): Promise<() => void> {
 
   // dotenv doesn't parse out newlines, so we need to do a manual replace
   const privateKey = Environment.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
-
-  let jwt = new JWT(Environment.FIREBASE_CLIENT_EMAIL, null, privateKey, [
-    "https://www.googleapis.com/auth/firebase.messaging"
-  ]);
+  let jwt = new JWT(
+    Environment.FIREBASE_CLIENT_EMAIL,
+    null,
+    privateKey,
+    ["https://www.googleapis.com/auth/firebase.messaging"],
+    null
+  );
 
   await jwt.authorize();
 

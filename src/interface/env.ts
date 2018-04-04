@@ -1,6 +1,5 @@
 export interface EnvironmentVariables {
   FIREBASE_AUTH_KEY: string;
-  FIREBASE_SENDER_ID: string;
   DATABASE_URL: string;
   USER_API_KEY: string;
   ADMIN_API_KEY: string;
