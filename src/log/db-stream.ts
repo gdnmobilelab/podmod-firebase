@@ -3,10 +3,19 @@ import * as stream from "stream";
 
 export class DbStream extends stream.Writable {
   client: pg.Client;
+  activeQuery: boolean = false;
+  finaliseCallback?: Function;
 
   constructor(client: pg.Client) {
     super({ objectMode: true });
     this.client = client;
+  }
+
+  _final(cb: Function) {
+    if (this.activeQuery === false) {
+      return cb();
+    }
+    this.finaliseCallback = cb;
   }
 
   _write(dataOriginal: any, encoding: String, cb: Function) {
@@ -38,7 +47,13 @@ export class DbStream extends stream.Writable {
       specificFields.map((item, i) => "$" + (i + 1)).join(",") +
       ":: jsonb)";
 
+    this.activeQuery = true;
     this.client.query(query, fieldData, (err, result) => {
+      this.activeQuery = false;
+      if (this.finaliseCallback) {
+        this.finaliseCallback();
+        this.finaliseCallback = null;
+      }
       if (err) {
         console.error(err);
       }

@@ -11,22 +11,22 @@ export function createLogger(client: pg.Client) {
 
   if (process.env.NODE_ENV === "test") {
     log.level(50);
-  } else {
-    let dbStream = new DbStream(client);
-
-    log.addStream({
-      level: "debug",
-      stream: dbStream,
-      type: "raw"
-    });
-
-    if (process.env.SLACK_WEBHOOK) {
-      log.addStream({
-        level: "warn",
-        stream: new SlackWebhook(process.env.SLACK_WEBHOOK, dbStream),
-        type: "raw"
-      });
-    }
   }
-  return log;
+  let dbStream = new DbStream(client);
+
+  log.addStream({
+    level: "debug",
+    stream: dbStream,
+    type: "raw"
+  });
+
+  // if (process.env.SLACK_WEBHOOK) {
+  //   log.addStream({
+  //     level: "warn",
+  //     stream: new SlackWebhook(process.env.SLACK_WEBHOOK, dbStream),
+  //     type: "raw"
+  //   });
+  // }
+
+  return { log, dbStream };
 }

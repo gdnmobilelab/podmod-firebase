@@ -2,42 +2,94 @@ import * as nock from "nock";
 import fetch from "node-fetch";
 import { expect } from "chai";
 import { createServer } from "../../src/index";
-import * as sinon from "sinon";
-import * as GoogleAuth from "google-auth-library";
 
-export function subscribeUserNock(userId: string, topic: String) {
-  return nock("https://iid.googleapis.com", {
+import Environment from "../../src/util/env";
+
+// let res = await fetch(`https://fcm.googleapis.com/v1/projects${Environment.FCM_PROJECT}/messages:send`, {
+//   headers: {
+//     "Content-Type": "application/json",
+//     Authorization: "Bearer " + token
+//   },
+//   body: JSON.stringify(sendBody)
+// });
+
+export function sendMessageNock(target) {
+  return nock("https://fcm.googleapis.com", {
     reqheaders: {
       "Content-Type": "application/json",
-      authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
+      authorization: "Bearer TEST_TOKEN"
     }
   })
-    .post(`/iid/v1/${userId}/rel/topics/_${process.env.NODE_ENV}_${topic}`)
-    .reply(200, {});
+    .post(`/v1/projects/${Environment.FCM_PROJECT}/messages:send`, {
+      message: target,
+      validate_only: false
+    })
+    .reply(200, {
+      name: "/test_message"
+    });
 }
 
-describe("Toggle subscription state", () => {
+describe("Send message", () => {
   let stop: () => void;
-  let stub: sinon.SinonStub;
 
   before(async () => {
-    stub = sinon.stub(GoogleAuth, "JWT").returns({
-      getAccessToken() {
-        return Promise.resolve({ token: "TEST_TOKEN" });
-      },
-      authorize() {
-        return Promise.resolve(true);
-      }
-    });
-
     stop = await createServer();
   });
 
   after(async () => {
-    stub.restore();
     nock.cleanAll();
     await stop();
   });
 
-  it.only("tests", async () => {});
+  it("Should error when bad request body sent", async () => {
+    let res = await fetch(`http://localhost:3000/registrations/TEST_PUSH_TOKEN`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: Environment.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        message: {
+          blah: "incomplete"
+        }
+      })
+    });
+
+    expect(res.status).to.eq(400);
+    let json = await res.json();
+    expect(json.message).to.eq("Request validation failed");
+  });
+
+  it("Should error when bad request body sent", async () => {
+    let nocked = sendMessageNock({
+      token: "TEST_PUSH_TOKEN",
+      notification: {
+        title: "Test title",
+        body: "test body"
+      }
+    });
+
+    let res = await fetch(`http://localhost:3000/registrations/TEST_PUSH_TOKEN`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: Environment.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        message: {
+          notification: {
+            title: "Test title",
+            body: "test body"
+          }
+        }
+      })
+    });
+
+    expect(res.status).to.eq(200);
+    let json = await res.json();
+    expect(json.success).to.eq(true);
+    expect(json.name).to.eq("/test_message");
+
+    nocked.done();
+  });
 });

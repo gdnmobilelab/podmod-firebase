@@ -54,11 +54,28 @@ interface FCMApnsConfig {
   payload: ApnsPayload;
 }
 
-interface FCMMessage {
-  name: string;
+export interface FCMMessage {
   data?: any;
-  notification?: FCMNotification;
+  notification: FCMNotification;
   android?: FCMAndroidConfig;
   webpush?: FCMWebpushConfig;
   apns?: FCMApnsConfig;
+}
+
+export interface FCMTopicMessage extends FCMMessage {
+  topic: string;
+}
+
+export interface FCMTokenMessage extends FCMMessage {
+  token: string;
+}
+
+export interface FCMConditionMessage extends FCMMessage {
+  condition: string;
+}
+
+// https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages/send
+export interface MessageSendRequest {
+  message: FCMMessage;
+  validate_only: boolean;
 }

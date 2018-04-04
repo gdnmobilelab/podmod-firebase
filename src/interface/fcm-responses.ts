@@ -46,3 +46,7 @@ export interface FCMiOSBatchRegistrationResponse {
 export interface FCMTopicSubscribeResponse {
   error?: string;
 }
+export interface FCMSendMessageResponse {
+  name?: string;
+  error?: FCMError;
+}

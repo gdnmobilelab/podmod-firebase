@@ -3,11 +3,10 @@ import * as restifyCORS from "restify-cors-middleware";
 import { subscribeOrUnsubscribe } from "./endpoints/subscribe";
 import { getFirebaseId } from "./endpoints/get-firebase-id";
 import { getSubscribed } from "./endpoints/get-subscribed";
-import { sendMessageToTopic, sendMessageToRegistration } from "./endpoints/send-message";
-import { getSubscriberCount } from "./endpoints/get-count";
+import { sendMessageToRegistration } from "./endpoints/send-message";
+import { getTopicDetails } from "./endpoints/topic-details";
 // import { batchOperation } from "./endpoints/batch";
 import { createLogger } from "./log/log";
-import { RestifyError } from "./util/restify-error";
 import { createClient as createDatabaseClient, addClientToRequest } from "./util/db";
 import { checkForKey, ApiKeyType } from "./security/key-check";
 import { JWT } from "google-auth-library";
@@ -18,7 +17,7 @@ if (!process.env.NODE_ENV) {
 
 export async function createServer(): Promise<() => void> {
   const client = createDatabaseClient();
-  const log = createLogger(client);
+  const { log, dbStream } = createLogger(client);
 
   const server = restify.createServer({ log });
 
@@ -59,10 +58,10 @@ export async function createServer(): Promise<() => void> {
   // use() on the other hand only runs on requests that have matching routes.
 
   server.use(
-    restify.bodyParser({
+    restify.plugins.bodyParser({
       mapParams: false
     }),
-    restify.requestLogger(),
+    restify.plugins.requestLogger(),
     cors.actual,
     // make our database client available on req.db. Most DB stuff goes through req.log() but
     // not all
@@ -74,9 +73,9 @@ export async function createServer(): Promise<() => void> {
   server.post("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
   server.del("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
 
-  server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
+  // server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
   server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
-  server.get("/topics/:topic_name/subscribers", checkForKey(ApiKeyType.Admin), getSubscriberCount);
+  server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
 
   // server.post("/topics/:topic_name/batch/subscribe", checkForKey(ApiKeyType.Admin), batchOperation("subscribe"));
   // server.post("/topics/:topic_name/batch/unsubscribe", checkForKey(ApiKeyType.Admin), batchOperation("unsubscribe"));
@@ -120,8 +119,9 @@ export async function createServer(): Promise<() => void> {
   // closes the server. We're only using this in tests so this is probably fine for now.
 
   return async function() {
+    await new Promise(fulfill => dbStream.end(fulfill));
     await Promise.all([new Promise(fulfill => client.end(fulfill)), new Promise(fulfill => server.close(fulfill))]);
-    log.warn({ action: "server-stop" }, "Stopped server");
+    // log.warn({ action: "server-stop" }, "Stopped server");
   };
 }
 

@@ -1,7 +1,7 @@
 import { WebSubscription, iOSSubscription } from "../interface/subscription-types";
 import { FCMError, FCMWebRegistrationResponse, FCMiOSBatchRegistrationResponse } from "../interface/fcm-responses";
 import fetch from "node-fetch";
-import * as restify from "restify";
+import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
 
 // API documentation for this:
 // https://developers.google.com/instance-id/reference/server#create_relationship_maps_for_app_instances
@@ -41,7 +41,7 @@ async function getIdForWebSubscription(sub: WebSubscription): Promise<string> {
   return json.token;
 }
 
-async function getIdForiOSSubscription(sub: iOSSubscription, req: restify.Request): Promise<string> {
+async function getIdForiOSSubscription(sub: iOSSubscription, req: PushkinRequest): Promise<string> {
   if (!sub.bundle_name) {
     throw new Error("Must provide iOS bundle name in bundle_name field.");
   }
@@ -97,24 +97,26 @@ async function getIdForiOSSubscription(sub: iOSSubscription, req: restify.Reques
   return json.results[0].registration_token;
 }
 
-export const getFirebaseId: restify.RequestHandler = async function(req, res, next) {
-  let subscription = req.body["subscription"];
+interface FirebaseIDRequestBody {
+  subscription: iOSSubscription | WebSubscription;
+}
 
+export const getFirebaseId: PushkinRequestHandler<FirebaseIDRequestBody, void> = async function(req, res, next) {
   try {
     let firebaseID: string;
 
-    if (subscription.platform === "iOS") {
-      firebaseID = await getIdForiOSSubscription(subscription, req);
-    } else if (!subscription.platform) {
-      // If there is no platform key it (presumably) means we're being sent
-      // a web subscription.
-
-      firebaseID = await getIdForWebSubscription(subscription);
+    if (!req.body.subscription.platform) {
+      firebaseID = await getIdForWebSubscription(req.body.subscription as WebSubscription);
+    } else if (req.body.subscription.platform === "iOS") {
+      firebaseID = await getIdForiOSSubscription(req.body.subscription as iOSSubscription, req);
     } else {
       throw new Error("Unrecognised notification platform.");
     }
 
-    req.log.info({ firebaseID, subscription }, "Successfully retreived Firebase ID for subscription.");
+    req.log.info(
+      { firebaseID, subscription: req.body.subscription },
+      "Successfully retreived Firebase ID for subscription."
+    );
 
     res.json({
       id: firebaseID
@@ -122,7 +124,7 @@ export const getFirebaseId: restify.RequestHandler = async function(req, res, ne
   } catch (err) {
     req.log.error(
       {
-        subscription,
+        subscription: req.body.subscription,
         error: err.message
       },
       "Failed to get Firebase ID for subscription."
