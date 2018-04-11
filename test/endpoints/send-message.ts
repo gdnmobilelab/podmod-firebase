@@ -2,6 +2,7 @@ import * as nock from "nock";
 import fetch from "node-fetch";
 import { expect } from "chai";
 import { createServer } from "../../src/index";
+import { namespaceTopic } from "../../src/util/namespace";
 
 import Environment from "../../src/util/env";
 
@@ -95,7 +96,7 @@ describe("Send message", () => {
 
   it("Should successfully send topic message", async () => {
     let nocked = sendMessageNock({
-      topic: "TEST_TOPIC",
+      topic: namespaceTopic("TEST_TOPIC"),
       notification: {
         title: "Test title",
         body: "test body"

@@ -27,7 +27,7 @@ export function extractNamespacedTopic(namespacedTopic: string) {
   }
 
   return {
-    env: regexResult[1],
-    topic: regexResult[2]
+    env: decodeURIComponent(regexResult[1]),
+    topic: decodeURIComponent(regexResult[2])
   };
 }

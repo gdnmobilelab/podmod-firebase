@@ -10,6 +10,7 @@ import Validators from "../validators/validators";
 import Environment from "../util/env";
 import { join } from "path";
 import { ValidationFailedError } from "../util/errors";
+import { namespaceTopic } from "../util/namespace";
 
 const validator = new Validator();
 validator.addSchema(Validators);
@@ -98,7 +99,9 @@ export const sendMessageToTopic: PushkinRequestHandler<SendMessageBody, SendTopi
   next
 ) {
   try {
-    let mergedMessage: FCMTopicMessage = Object.assign({}, req.body.message, { topic: req.params.topic_name });
+    let namespacedTopic = namespaceTopic(req.params.topic_name);
+
+    let mergedMessage: FCMTopicMessage = Object.assign({}, req.body.message, { topic: namespacedTopic });
 
     doValidationCheck(mergedMessage, Validators.definitions.FCMTopicMessage);
 
