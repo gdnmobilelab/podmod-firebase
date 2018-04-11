@@ -37,7 +37,8 @@ describe("Topic Details", () => {
     await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers/TEST_USER", {
       method: "POST",
       headers: {
-        authorization: Environment.USER_API_KEY
+        authorization: Environment.USER_API_KEY,
+        "content-type": "application/json"
       }
     });
 
@@ -48,16 +49,17 @@ describe("Topic Details", () => {
     });
 
     let json = await res.json();
-    expect(json.subscribers.subscribes).to.eq(1);
-    expect(json.subscribers.unsubscribes).to.eq(0);
-    expect(json.subscribers.currentlySubscribed).to.eq(1);
+    expect(json.subscribers.subscribes).to.eq(1, "Subscribes should equal 1");
+    expect(json.subscribers.unsubscribes).to.eq(0, "Unsubscribes should equal 0");
+    expect(json.subscribers.currentlySubscribed).to.eq(1, "Current subscribers should equal 1");
 
     sub.done();
 
     await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers/TEST_USER", {
       method: "DELETE",
       headers: {
-        authorization: Environment.USER_API_KEY
+        authorization: Environment.USER_API_KEY,
+        "content-type": "application/json"
       }
     });
 
@@ -68,9 +70,9 @@ describe("Topic Details", () => {
     });
 
     json = await res.json();
-    expect(json.subscribers.subscribes).to.eq(1);
-    expect(json.subscribers.unsubscribes).to.eq(1);
-    expect(json.subscribers.currentlySubscribed).to.eq(0);
+    expect(json.subscribers.subscribes).to.eq(1, "Subscribes should equal 1");
+    expect(json.subscribers.unsubscribes).to.eq(1, "Unsubscribes should equal 1");
+    expect(json.subscribers.currentlySubscribed).to.eq(0, "Current subscribers should equal 0");
 
     unsub.done();
   });

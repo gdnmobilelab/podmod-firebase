@@ -9,7 +9,6 @@ import { sendMessage } from "./send-message";
 import Environment from "../util/env";
 
 async function sendRequest(id: string, topicName: string, method: string, log: bunyan): Promise<boolean> {
-  console.log("send?");
   let res = await fetch(`https://iid.googleapis.com/iid/v1/${id}/rel/topics/${topicName}`, {
     method: method,
     headers: {

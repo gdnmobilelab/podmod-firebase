@@ -21,7 +21,7 @@ async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest
     keys: sub.keys
   };
 
-  let response = await fetch("http://iid.googleapis.com/v1/web/iid", {
+  let response = await fetch("https://iid.googleapis.com/v1/web/iid", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

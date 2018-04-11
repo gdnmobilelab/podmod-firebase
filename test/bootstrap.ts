@@ -5,6 +5,7 @@ import * as ChildProcess from "child_process";
 import * as sinon from "sinon";
 import * as GoogleAuth from "google-auth-library";
 import { check as checkEnvironmentVariables } from "../src/util/env";
+import * as nock from "nock";
 
 require("dotenv").config({ path: __dirname + "/test.env" });
 
@@ -21,6 +22,10 @@ let jwt: sinon.SinonStub;
 
 before(async function() {
   checkEnvironmentVariables();
+
+  nock.disableNetConnect();
+  nock.enableNetConnect("localhost:3000");
+
   jwt = sinon.stub(GoogleAuth, "JWT").returns({
     getAccessToken() {
       return Promise.resolve({ token: "TEST_TOKEN" });
@@ -54,7 +59,7 @@ before(async function() {
       await client.connect();
       globalStore.dbClient = client;
     } catch (err) {
-      if (err.routine) {
+      if (err.routine && err.routine !== "ProcessStartupPacket") {
         // this is an actual Postgres error that we're not expecting.
         console.log(err);
         throw err;
@@ -104,8 +109,13 @@ beforeEach(async () => {
   }
 });
 
+afterEach(async () => {});
+
 after(() => {
   jwt.restore();
+
+  nock.cleanAll();
+  nock.enableNetConnect();
 
   // If we're in watch mode we want to keep the docker instance alive. If not,
   // it'll hang forever unless we kill them.
