@@ -2,6 +2,7 @@ import fetch from "node-fetch";
 import { PushkinRequestHandler } from "../util/request-handler";
 import { InternalServerError } from "restify-errors";
 import Environment from "../util/env";
+import { namespaceTopic, extractNamespacedTopic } from "../util/namespace";
 
 interface GetSubscribedParams {
   registration_id: string;
@@ -37,8 +38,14 @@ export const getSubscribed: PushkinRequestHandler<void, GetSubscribedParams> = a
       topics = Object.keys(json.rel.topics);
     }
 
+    topics = topics
+      .map(extractNamespacedTopic)
+      .filter(extracted => extracted.env === Environment.NODE_ENV)
+      .map(extracted => extracted.topic);
+
     res.json(topics);
   } catch (err) {
+    console.log(err);
     next(err);
   }
 };

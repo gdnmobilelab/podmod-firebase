@@ -3,26 +3,27 @@ import fetch from "node-fetch";
 import { expect } from "chai";
 import { createServer } from "../../src/index";
 import { sendMessageNock } from "./send-message";
+import { namespaceTopic } from "../../src/util/namespace";
 
-export function subscribeUserNock(userId: string, topic: String) {
+export function subscribeUserNock(userId: string, topic: string) {
   return nock("https://iid.googleapis.com", {
     reqheaders: {
       "Content-Type": "application/json",
       authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
     }
   })
-    .post(`/iid/v1/${userId}/rel/topics/${topic}`)
+    .post(`/iid/v1/${userId}/rel/topics/${namespaceTopic(topic)}`)
     .reply(200, {});
 }
 
-export function unsubscribeUserNock(userId: string, topic: String) {
+export function unsubscribeUserNock(userId: string, topic: string) {
   return nock("https://iid.googleapis.com", {
     reqheaders: {
       "Content-Type": "application/json",
       authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
     }
   })
-    .delete(`/iid/v1/${userId}/rel/topics/${topic}`)
+    .delete(`/iid/v1/${userId}/rel/topics/${namespaceTopic(topic)}`)
     .reply(200, {});
 }
 
@@ -55,7 +56,7 @@ describe("Toggle subscription state", () => {
 
     // expect(res.status).to.eq(200);
     let json = await res.json();
-
+    expect(res.status).to.eq(200);
     expect(json.subscribed).to.eq(true);
 
     nocked.done();
@@ -71,7 +72,7 @@ describe("Toggle subscription state", () => {
         authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
       }
     })
-      .post(`/iid/v1/${userId}/rel/topics/${topic}`)
+      .post(`/iid/v1/${userId}/rel/topics/${namespaceTopic(topic)}`)
       .reply(
         400,
         JSON.stringify({
@@ -165,7 +166,7 @@ describe("Toggle subscription state", () => {
         authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
       }
     })
-      .post(`/iid/v1/${userId}/rel/topics/${topic}`)
+      .post(`/iid/v1/${userId}/rel/topics/${namespaceTopic(topic)}`)
       .reply(
         500,
         JSON.stringify({

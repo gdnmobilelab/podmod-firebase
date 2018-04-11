@@ -9,4 +9,5 @@ export interface EnvironmentVariables {
   FCM_PROJECT: string;
   ALLOWED_ORIGINS?: string;
   SERVER_PORT?: string;
+  TOPIC_PREFIX: string;
 }

@@ -1,22 +1,34 @@
-import { createServer } from "../src/index";
 import fetch from "node-fetch";
 import { expect } from "chai";
-import * as nock from "nock";
+import * as restify from "restify";
+import { checkForKey, ApiKeyType } from "../src/security/key-check";
+import { createLogger } from "../src/log/log";
+import Environment from "../src/util/env";
+import * as bunyan from "bunyan";
 
 describe("Authorisation", () => {
-  let stop: () => void;
+  // let stop: () => void;
 
-  before(async () => {
-    stop = await createServer();
+  let server: restify.Server | undefined;
+  let log = bunyan.createLogger({ name: "dummy", level: 100 });
+
+  beforeEach(async () => {
+    server = restify.createServer({ log });
   });
 
-  after(async () => {
-    nock.cleanAll();
-    await stop();
+  afterEach(done => {
+    server.close(done);
+    server = undefined;
   });
 
   it("Should deny at the user level", async () => {
-    let res = await fetch("http://localhost:3000/registrations/TEST_ID/topics", {
+    server.get("/deny-user", checkForKey(ApiKeyType.User), (req, res) => {
+      res.end("yes");
+    });
+
+    server.listen(3000);
+
+    let res = await fetch("http://localhost:3000/deny-user", {
       headers: {
         authorization: "NOT_OUR_TEST_KEY"
       }
@@ -25,31 +37,29 @@ describe("Authorisation", () => {
   });
 
   it("Should allow at the user level", async () => {
-    let nocked = nock("https://iid.googleapis.com")
-      .get("/iid/info/TEST_ID?details=true")
-      .reply(
-        200,
-        JSON.stringify({
-          rel: {
-            topics: {
-              topic: 1
-            }
-          }
-        })
-      );
+    server.get("/allow-user", checkForKey(ApiKeyType.User), (req, res) => {
+      res.end("yes");
+    });
 
-    let res = await fetch("http://localhost:3000/registrations/TEST_ID/topics", {
+    server.listen(3000);
+
+    let res = await fetch("http://localhost:3000/allow-user", {
       headers: {
-        authorization: process.env.USER_API_KEY
+        authorization: Environment.USER_API_KEY
       }
     });
 
     expect(res.status).to.eq(200);
-    nocked.done();
   });
 
   it("Should deny at the admin level", async () => {
-    let res = await fetch("http://localhost:3000/topics/TEST_TOPIC", {
+    server.get("/deny-admin", checkForKey(ApiKeyType.Admin), (req, res) => {
+      res.end("yes");
+    });
+
+    server.listen(3000);
+
+    let res = await fetch("http://localhost:3000/deny-admin", {
       headers: {
         authorization: "NOT_OUR_TEST_KEY"
       }
@@ -58,12 +68,18 @@ describe("Authorisation", () => {
   });
 
   it("Should allow at the admin level", async () => {
-    process.env.ADMIN_API_KEY = "TEST_ADMIN_KEY";
-    let res = await fetch("http://localhost:3000/topics/TEST_TOPIC", {
+    server.get("/allow-admin", checkForKey(ApiKeyType.Admin), (req, res) => {
+      res.end("yes");
+    });
+
+    server.listen(3000);
+
+    let res = await fetch("http://localhost:3000/allow-admin", {
       headers: {
-        authorization: process.env.ADMIN_API_KEY
+        authorization: Environment.ADMIN_API_KEY
       }
     });
+
     expect(res.status).to.eq(200);
   });
 });

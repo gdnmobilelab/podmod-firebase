@@ -7,9 +7,12 @@ import { BadRequestError, InternalServerError } from "restify-errors";
 import { FCMTokenMessage, FCMMessage } from "../interface/fcm-requests";
 import { sendMessage } from "./send-message";
 import Environment from "../util/env";
+import { namespaceTopic } from "../util/namespace";
 
 async function sendRequest(id: string, topicName: string, method: string, log: bunyan): Promise<boolean> {
-  let res = await fetch(`https://iid.googleapis.com/iid/v1/${id}/rel/topics/${topicName}`, {
+  let namespacedTopic = namespaceTopic(topicName);
+
+  let res = await fetch(`https://iid.googleapis.com/iid/v1/${id}/rel/topics/${namespacedTopic}`, {
     method: method,
     headers: {
       "Content-Type": "application/json",
