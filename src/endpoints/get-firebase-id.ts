@@ -21,20 +21,17 @@ async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest
     keys: sub.keys
   };
 
-  let token = await req.jwt.getAccessToken();
-  console.log(`key=${Environment.FIREBASE_AUTH_KEY}`, subscriptionToSend);
   let response = await fetch("http://iid.googleapis.com/v1/web/iid", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `key=${Environment.FIREBASE_AUTH_KEY}`
-      // Authorization: "Bearer " + token
     },
     body: JSON.stringify(subscriptionToSend)
   });
 
   let json = (await response.json()) as FCMWebRegistrationResponse;
-  console.log(json);
+
   if (json.error as FCMError) {
     throw new Error(json.error.message);
   }
@@ -109,6 +106,9 @@ interface FirebaseIDRequestBody {
 export const getFirebaseId: PushkinRequestHandler<FirebaseIDRequestBody, void> = async function(req, res, next) {
   try {
     let firebaseID: string;
+    if (!req.body || !req.body.subscription) {
+      throw new BadRequestError("You must send a 'subscription' object with the client push info.");
+    }
 
     if (!req.body.subscription.platform) {
       firebaseID = await getIdForWebSubscription(req.body.subscription as WebSubscription, req);

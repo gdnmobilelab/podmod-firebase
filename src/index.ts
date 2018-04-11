@@ -63,7 +63,8 @@ export async function createServer(): Promise<() => void> {
 
   server.use(
     restify.plugins.bodyParser({
-      mapParams: false
+      mapParams: false,
+      rejectUnknown: true
     }),
     restify.plugins.requestLogger(),
     cors.actual,

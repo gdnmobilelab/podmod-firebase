@@ -24,9 +24,17 @@ interface FCMAndroidConfig {
   notification: FCMAndroidNotification;
 }
 
+interface FCMWebpushNotification {
+  title?: string;
+  body?: string;
+  icon?: string;
+  badge?: string;
+}
+
 interface FCMWebpushConfig {
-  headers: { [key: string]: string };
-  data: { [key: string]: string };
+  headers?: { [key: string]: string };
+  data?: { [key: string]: any };
+  notification?: FCMWebpushNotification;
 }
 
 interface ApnsAlert {

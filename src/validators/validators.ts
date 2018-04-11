@@ -208,15 +208,29 @@
         },
         "data": {
           "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+          "additionalProperties": {}
+        },
+        "notification": {
+          "$ref": "#/definitions/FCMWebpushNotification"
         }
-      },
-      "required": [
-        "data",
-        "headers"
-      ]
+      }
+    },
+    "FCMWebpushNotification": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "badge": {
+          "type": "string"
+        }
+      }
     },
     "FCMApnsConfig": {
       "type": "object",

@@ -23,7 +23,7 @@ export async function sendMessage(message: FCMTokenMessage | FCMTopicMessage, re
   };
 
   let { token } = await req.jwt.getAccessToken();
-
+  console.log("token:", token);
   let res = await fetch(`https://fcm.googleapis.com/v1/projects/${Environment.FCM_PROJECT}/messages:send`, {
     method: "POST",
     headers: {

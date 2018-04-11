@@ -14,6 +14,7 @@ export function checkForKey(keyType: ApiKeyType): restify.RequestHandler {
     if (!auth) {
       req.log.warn({ url: req.url }, "Attempt to access endpoint without specifying API key.");
       next(new ForbiddenError("You must provide an API key in the Authorization field"));
+      return;
     }
 
     if (keyType === ApiKeyType.User && auth === Environment.USER_API_KEY) {
