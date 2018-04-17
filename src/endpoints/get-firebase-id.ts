@@ -101,6 +101,7 @@ async function getIdForiOSSubscription(sub: iOSSubscription, req: PushkinRequest
 
 interface FirebaseIDRequestBody {
   subscription: iOSSubscription | WebSubscription;
+  extra_info?: any;
 }
 
 export const getFirebaseId: PushkinRequestHandler<FirebaseIDRequestBody, void> = async function(req, res, next) {
@@ -108,6 +109,11 @@ export const getFirebaseId: PushkinRequestHandler<FirebaseIDRequestBody, void> =
     let firebaseID: string;
     if (!req.body || !req.body.subscription) {
       throw new BadRequestError("You must send a 'subscription' object with the client push info.");
+    }
+
+    if (req.body.extra_info) {
+      // This is a place to add any user-specific information that we can pull out of the DB later.
+      req.log.info({ extra_info: req.body.extra_info }, "Extra information was sent with the request");
     }
 
     if (!req.body.subscription.platform) {

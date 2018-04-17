@@ -1,5 +1,3 @@
-import * as restify from "restify";
-import * as bunyan from "bunyan";
 import fetch, { Response } from "node-fetch";
 import * as url from "url";
 import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
@@ -11,6 +9,7 @@ import Environment from "../util/env";
 import { join } from "path";
 import { ValidationFailedError } from "../util/errors";
 import { namespaceTopic } from "../util/namespace";
+import { InternalServerError } from "restify-errors";
 
 const validator = new Validator();
 validator.addSchema(Validators);
@@ -37,7 +36,7 @@ export async function sendMessage(message: FCMTokenMessage | FCMTopicMessage, re
 
   if (jsonResponse.error) {
     req.log.error(jsonResponse.error, "Encountered error when trying to send message");
-    throw new Error(jsonResponse.error.message);
+    throw new InternalServerError(jsonResponse.error.message);
   }
 
   req.log.info({ message_name: jsonResponse.name }, "Message successfully sent");

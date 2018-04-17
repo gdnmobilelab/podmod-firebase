@@ -32,7 +32,7 @@ export async function createServer(): Promise<() => void> {
     Environment.FIREBASE_CLIENT_EMAIL,
     null,
     privateKey,
-    ["https://www.googleapis.com/auth/firebase.messaging"],
+    ["https://www.googleapis.com/auth/firebase.messaging", "https://www.googleapis.com/auth/cloud-platform"],
     null
   );
 

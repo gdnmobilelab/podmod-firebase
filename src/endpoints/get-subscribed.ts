@@ -39,8 +39,15 @@ export const getSubscribed: PushkinRequestHandler<void, GetSubscribedParams> = a
     }
 
     topics = topics
-      .map(extractNamespacedTopic)
-      .filter(extracted => extracted.env === Environment.NODE_ENV)
+      .map(topic => {
+        try {
+          return extractNamespacedTopic(topic);
+        } catch (err) {
+          // it's possible topics we don't know about exist, so we don't want to crash out
+          return null;
+        }
+      })
+      .filter(extracted => extracted && extracted.env === Environment.NODE_ENV)
       .map(extracted => extracted.topic);
 
     res.json(topics);

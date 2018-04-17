@@ -106,6 +106,9 @@
         },
         "SERVER_PORT": {
           "type": "string"
+        },
+        "TOPIC_PREFIX": {
+          "type": "string"
         }
       },
       "required": [
@@ -116,6 +119,7 @@
         "FIREBASE_CLIENT_EMAIL",
         "FIREBASE_PRIVATE_KEY",
         "NODE_ENV",
+        "TOPIC_PREFIX",
         "USER_API_KEY"
       ]
     },
