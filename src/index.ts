@@ -5,6 +5,7 @@ import { getFirebaseId } from "./endpoints/get-firebase-id";
 import { getSubscribed } from "./endpoints/get-subscribed";
 import { sendMessageToRegistration, sendMessageToTopic } from "./endpoints/send-message";
 import { getTopicDetails } from "./endpoints/topic-details";
+import { getVAPIDKey } from "./endpoints/vapid-key";
 // import { batchOperation } from "./endpoints/batch";
 import { createLogger } from "./log/log";
 import { createClient as createDatabaseClient, addClientToRequest } from "./util/db";
@@ -81,6 +82,7 @@ export async function createServer(): Promise<() => void> {
   server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
   server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
   server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
+  server.get("/vapid-key", checkForKey(ApiKeyType.User), getVAPIDKey);
 
   // server.post("/topics/:topic_name/batch/subscribe", checkForKey(ApiKeyType.Admin), batchOperation("subscribe"));
   // server.post("/topics/:topic_name/batch/unsubscribe", checkForKey(ApiKeyType.Admin), batchOperation("unsubscribe"));

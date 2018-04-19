@@ -70,6 +70,15 @@ export const sendMessageToRegistration: PushkinRequestHandler<SendMessageBody, S
   next
 ) {
   try {
+    req.log.info(
+      {
+        action: "send-message",
+        target_type: "registration",
+        topic: req.params.registration_id
+      },
+      "Received request to send message"
+    );
+
     // Take the FCMMessage the user sent, and merge it with the registration ID to form
     // a token message send request.
 
@@ -79,11 +88,14 @@ export const sendMessageToRegistration: PushkinRequestHandler<SendMessageBody, S
 
     let name = await sendMessage(mergedMessage, req);
 
+    req.log.info({ name }, "Successfully sent message");
+
     res.json({
       success: true,
       name
     });
   } catch (err) {
+    req.log.error({ error: err.message }, "Failed to send message");
     next(err);
   }
 };
@@ -100,17 +112,30 @@ export const sendMessageToTopic: PushkinRequestHandler<SendMessageBody, SendTopi
   try {
     let namespacedTopic = namespaceTopic(req.params.topic_name);
 
+    req.log.info(
+      {
+        action: "send-message",
+        target_type: "topic",
+        topic: req.params.topic_name,
+        namespaced: namespacedTopic
+      },
+      "Received request to send message"
+    );
+
     let mergedMessage: FCMTopicMessage = Object.assign({}, req.body.message, { topic: namespacedTopic });
 
     doValidationCheck(mergedMessage, Validators.definitions.FCMTopicMessage);
 
     let name = await sendMessage(mergedMessage, req);
 
+    req.log.info({ name }, "Successfully sent message");
+
     res.json({
       success: true,
       name
     });
   } catch (err) {
+    req.log.error({ error: err.message }, "Failed to send message");
     next(err);
   }
 };

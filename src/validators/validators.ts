@@ -109,6 +109,9 @@
         },
         "TOPIC_PREFIX": {
           "type": "string"
+        },
+        "VAPID_PUBLIC_KEY": {
+          "type": "string"
         }
       },
       "required": [
@@ -120,7 +123,8 @@
         "FIREBASE_PRIVATE_KEY",
         "NODE_ENV",
         "TOPIC_PREFIX",
-        "USER_API_KEY"
+        "USER_API_KEY",
+        "VAPID_PUBLIC_KEY"
       ]
     },
     "FCMNotification": {

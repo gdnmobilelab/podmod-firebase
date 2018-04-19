@@ -52,7 +52,6 @@ export const getSubscribed: PushkinRequestHandler<void, GetSubscribedParams> = a
 
     res.json(topics);
   } catch (err) {
-    console.log(err);
     next(err);
   }
 };

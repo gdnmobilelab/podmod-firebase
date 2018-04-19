@@ -10,4 +10,5 @@ export interface EnvironmentVariables {
   ALLOWED_ORIGINS?: string;
   SERVER_PORT?: string;
   TOPIC_PREFIX: string;
+  VAPID_PUBLIC_KEY: string;
 }
