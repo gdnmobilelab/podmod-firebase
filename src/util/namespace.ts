@@ -9,10 +9,9 @@ function checkForSeparator(str: string) {
   }
 }
 
-checkForSeparator(Environment.TOPIC_PREFIX);
-checkForSeparator(Environment.NODE_ENV);
-
 export function namespaceTopic(topic: string) {
+  checkForSeparator(Environment.TOPIC_PREFIX);
+  checkForSeparator(Environment.NODE_ENV);
   checkForSeparator(topic);
 
   return `__${Environment.TOPIC_PREFIX}__${Environment.NODE_ENV}__${topic}`;
@@ -21,6 +20,9 @@ export function namespaceTopic(topic: string) {
 const EXTRACT_REGEX = new RegExp(`^__${Environment.TOPIC_PREFIX}__(.+)__(.+)$`);
 
 export function extractNamespacedTopic(namespacedTopic: string) {
+  checkForSeparator(Environment.TOPIC_PREFIX);
+  checkForSeparator(Environment.NODE_ENV);
+
   let regexResult = EXTRACT_REGEX.exec(namespacedTopic);
 
   if (!regexResult || !regexResult[2]) {

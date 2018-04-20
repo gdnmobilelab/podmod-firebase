@@ -252,23 +252,16 @@
         "payload": {
           "$ref": "#/definitions/ApnsPayload"
         }
-      },
-      "required": [
-        "headers",
-        "payload"
-      ]
+      }
     },
     "ApnsPayload": {
       "type": "object",
       "additionalProperties": {},
       "properties": {
-        "apns": {
+        "aps": {
           "$ref": "#/definitions/ApnsKeys"
         }
-      },
-      "required": [
-        "apns"
-      ]
+      }
     },
     "ApnsKeys": {
       "type": "object",
@@ -308,10 +301,7 @@
         "launch-image": {
           "type": "string"
         }
-      },
-      "required": [
-        "launch-image"
-      ]
+      }
     }
   }
 }

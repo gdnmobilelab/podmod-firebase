@@ -40,7 +40,7 @@ interface FCMWebpushConfig {
 interface ApnsAlert {
   title?: string;
   body?: string;
-  "launch-image": string;
+  "launch-image"?: string;
 }
 
 interface ApnsKeys {
@@ -53,13 +53,13 @@ interface ApnsKeys {
 }
 
 interface ApnsPayload {
-  apns: ApnsKeys;
+  aps?: ApnsKeys;
   [others: string]: any;
 }
 
 interface FCMApnsConfig {
-  headers: { [key: string]: string };
-  payload: ApnsPayload;
+  headers?: { [key: string]: string };
+  payload?: ApnsPayload;
 }
 
 export interface FCMMessage {

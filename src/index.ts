@@ -84,6 +84,10 @@ export async function createServer(): Promise<() => void> {
   server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
   server.get("/vapid-key", checkForKey(ApiKeyType.User), getVAPIDKey);
 
+  server.get("/healthcheck", (req, res, next) => {
+    res.end("OK");
+  });
+
   // server.post("/topics/:topic_name/batch/subscribe", checkForKey(ApiKeyType.Admin), batchOperation("subscribe"));
   // server.post("/topics/:topic_name/batch/unsubscribe", checkForKey(ApiKeyType.Admin), batchOperation("unsubscribe"));
 
