@@ -11,6 +11,7 @@ In normal situation Pushkin isn't necessary, you just add the Firebase dependenc
 * Node (currently v8.0)
 * Postgres (needs a version that supports the JSONB data type)
 * TypeScript
+* Docker (both in production and locally)
 
 ## Where it runs
 
@@ -21,42 +22,45 @@ Pushkin runs on staging and production:
 
 However, we still need to determine how each environment will be set up. There are additional complications with apps, since different versions of it use different push accounts. TBD.
 
-## Using it in a project
+## Using it
 
-(this will be wrapped up into a client library at some point)
+Refer to [the wiki](https://github.com/newsdev/pushkin/wiki) for further instructions on how to actually use Pushkin.
 
-### Authorization
+## Configuration
 
-Pushkin currently has two levels of authentication - user and admin. Individual actions like getting a token and subscribing to a topic are user level, wheras sending a message is admin level.
+Pushkin requires a number of environment variables to be set in order to function correctly. Some can be found in the Firebase project configuration page, but others require you to set up a [service account](https://console.cloud.google.com/projectselector/iam-admin/serviceaccounts) and download the JSON file with the required auth fields. (NOTE: this service account must also be given editor permissions, otherwise it won't be able to send messages)
 
-You'll need to send a token in the `Authorization` header of any request. If you don't know what the tokens are, you'll be able to find them in Meta.
+* `DATABASE_URL`: in the format of `postgres://user@password@host/database`.
+* `FCM_PROJECT`: the Firebase project ID. `project_id` in the service account JSON file.
+* `FIREBASE_AUTH_KEY`: the 'Server Key' listed in the Cloud Messaging configuration page of your Firebase project.
+* `FIREBASE_CLIENT_EMAIL`: the `client_email` field in the service account JSON.
+* `FIREBASE_PRIVATE_KEY`: the `private_key` field in the service account JSON. This and the client e-mail are used to create a JSON web token.
+* `USER_API_KEY`: the key required in the Authorization header of user-level requests
+* `ADMIN_API_KEY`: same as above, except for admin-level operations like sending messages
+* `TOPIC_PREFIX`: in case we're using multiple instances of Pushkin with one Firebase account (we only have one for production, for example) all Firebase topics will be prefixed with this string. Unless you're doing something particularly strange this should be invisible within your Pushkin instance.
+* `VAPID_PUBLIC_KEY`: used in web notifications. Right now it has to be hardcoded to FCM's key (see the [wiki](https://github.com/newsdev/pushkin/wiki/Getting-a-token) for details)
+* `NODE_ENV`: a very common environment variable in node projects, is either `production`, `staging` or `development`. Is also used alongside `TOPIC_PREFIX` when interfacing with Firebase topics, to ensure we don't leak staging messages into production.
 
-### Getting a token
+## Testing
 
-Firebase requires a Firebase-generated token for every device you want to interact with. If you're using the Android app, you already have a Firebase token in the webview. But if you're using iOS or the web, you'll need to get one. Do that through this endpoint:
+To run tests locally you need to have Docker installed locally (primarily to spin up a test database). To run the tests once, just run
 
-    POST /registrations
+    npm run test
 
-#### On the web
+from the command line. It uses Mocha to run through the current tests and will highlight results. If you're actively developing and want to run tests automatically, run
 
-Web notifications are secured using a [VAPID key](https://blog.mozilla.org/services/2016/04/04/using-vapid-with-webpush/). Unfortunately, right now FCM [only supports using their own key](https://developers.google.com/instance-id/reference/server#import_push_subscriptions), but the following has been set up so that we can create our own keys when it's possible (so our push tokens are easily exportable should something better than FCM turn up some day). The VAPID key is available at `/vapid-key` and has to be in the form on a `Uint8Array`, so do the following:
+    npm run test-watch
 
-    let res = await fetch(`${PUSHKIN_HOST}/vapid-key`, {
-        headers: {
-            Authorization: USER_KEY
-        }
-    });
-    let keyArray = new Uint8Array(await res.arrayBuffer());
+which will run all the tests, then watch for any file changes, running them again whenever it detects one. If you want to save time and avoid running every single test, use mocha's [`it.only`](https://jaketrent.com/post/run-single-mocha-test/#run-a-single-test) functionality to ensure only your current test runs.
 
-Then you can run [`PushManager.subscribe()`](https://developer.mozilla.org/en-US/docs/Web/API/PushManager/subscribe) to get the actual subscription object:
+## Running locally
 
-    let sub = await self.registration.pushManager.subscribe({
-        userVisibleOnly: true // you must always set this for now
-        applicationServerKey: keyArray
-    })
+Similar to testing, this uses `docker-compose` to set up a local database:
 
-Then you can just send that subscription object to Pushkin:
+    npm run dev
 
-    let res = await(`${PUSHKIN_HOST}/registrations`)
+However, you must also ensure that you have a `.env` file in your project directory that specifies various Firebase settings. We don't include this in the repo as it contains sensitive data, but `example.env` shows you the keys you need. For more information, see the 'configuration' section.
 
-If you're on the web, the body just needs to be the result of [`PushManager.subscribe()`](https://developer.mozilla.org/en-US/docs/Web/API/PushManager/subscribe)
+## Publishing a new build
+
+In addition to the usual Google Cloud steps to deploy a Docker container, you need to make sure you run `npm run build` before building a Docker image - this step transpiles the TypeScript into JavaScript, allowing the production Docker container to ignore TypeScript entirely.
