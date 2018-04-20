@@ -1,0 +1,5 @@
+{
+  "ext": "*.ts",
+  "exec": "node_modules/.bin/ts-node --require dotenv/config",
+  "watch": ["src"]
+}

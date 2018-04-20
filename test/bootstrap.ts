@@ -13,7 +13,6 @@ require("dotenv").config({ path: __dirname + "/test.env" });
 // wiped out. So instead we store our persistent variables in global.
 let globalStore: {
   dbClient: Client;
-  docker: ChildProcess.ChildProcess;
 } = global as any;
 
 // The server auths the web token when it's created, so we need to stub that
@@ -35,20 +34,9 @@ before(async function() {
     }
   });
 
-  if (globalStore.docker) {
+  if (globalStore.dbClient) {
     return;
   }
-
-  // We might need to download a DB image, so this may take some time.
-  this.timeout(60000);
-
-  globalStore.docker = ChildProcess.spawn("docker", [
-    "run",
-    "--rm",
-    "-p",
-    "127.0.0.1:54322:5432",
-    "onjin/alpine-postgres"
-  ]);
 
   async function tryToConnect() {
     process.stdout.write(".");
@@ -117,11 +105,10 @@ after(() => {
   nock.cleanAll();
   nock.enableNetConnect();
 
-  // If we're in watch mode we want to keep the docker instance alive. If not,
+  // If we're in watch mode we want to keep the db connection alive. If not,
   // it'll hang forever unless we kill them.
 
   if (process.argv.indexOf("--watch") == -1) {
-    globalStore.docker.kill();
     globalStore.dbClient.end();
   }
 });
