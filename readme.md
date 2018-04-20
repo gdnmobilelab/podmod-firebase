@@ -30,7 +30,7 @@ Refer to [the wiki](https://github.com/newsdev/pushkin/wiki) for further instruc
 
 Pushkin requires a number of environment variables to be set in order to function correctly. Some can be found in the Firebase project configuration page, but others require you to set up a [service account](https://console.cloud.google.com/projectselector/iam-admin/serviceaccounts) and download the JSON file with the required auth fields. (NOTE: this service account must also be given editor permissions, otherwise it won't be able to send messages)
 
-* `DATABASE_URL`: in the format of `postgres://user@password@host/database`.
+* `DATABASE_URL`: in the format of `postgres://user:password@host/database`.
 * `FCM_PROJECT`: the Firebase project ID. `project_id` in the service account JSON file.
 * `FIREBASE_AUTH_KEY`: the 'Server Key' listed in the Cloud Messaging configuration page of your Firebase project.
 * `FIREBASE_CLIENT_EMAIL`: the `client_email` field in the service account JSON.
