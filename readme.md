@@ -64,3 +64,11 @@ However, you must also ensure that you have a `.env` file in your project direct
 ## Publishing a new build
 
 In addition to the usual Google Cloud steps to deploy a Docker container, you need to make sure you run `npm run build` before building a Docker image - this step transpiles the TypeScript into JavaScript, allowing the production Docker container to ignore TypeScript entirely.
+
+## Rebuilding validators
+
+We validate incoming requests to ensure that they match the TypeScript interfaces we've defined. This is done by converting the TS interfaces into a JSON schema with [typescript-json-schema](https://github.com/YousefED/typescript-json-schema), but this isn't done automatically. When you change one of the request interfaces, run:
+
+    npm run build-interface-validation
+
+to overwrite the entry in `src/validation/validators.ts` (also, don't manually edit this file as any changes will get lost the next time it's run)
