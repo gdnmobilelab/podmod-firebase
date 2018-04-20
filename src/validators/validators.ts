@@ -112,6 +112,9 @@
         },
         "VAPID_PUBLIC_KEY": {
           "type": "string"
+        },
+        "PERMITTED_IOS_BUNDLES": {
+          "type": "string"
         }
       },
       "required": [
@@ -125,6 +128,63 @@
         "TOPIC_PREFIX",
         "USER_API_KEY",
         "VAPID_PUBLIC_KEY"
+      ]
+    },
+    "iOSSubscription": {
+      "type": "object",
+      "properties": {
+        "device_id": {
+          "type": "string"
+        },
+        "bundle_name": {
+          "type": "string"
+        },
+        "sandbox": {
+          "type": "boolean"
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "iOS"
+          ]
+        }
+      },
+      "required": [
+        "bundle_name",
+        "device_id",
+        "platform",
+        "sandbox"
+      ]
+    },
+    "WebSubscription": {
+      "type": "object",
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "expirationTime": {},
+        "keys": {
+          "type": "object",
+          "properties": {
+            "p256dh": {
+              "type": "string"
+            },
+            "auth": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "auth",
+            "p256dh"
+          ]
+        },
+        "platform": {
+          "type": "undefined"
+        }
+      },
+      "required": [
+        "endpoint",
+        "keys"
       ]
     },
     "FCMNotification": {

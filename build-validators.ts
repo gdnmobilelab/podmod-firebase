@@ -3,7 +3,11 @@ import * as path from "path";
 import * as fs from "fs";
 
 const program = TJS.getProgramFromFiles(
-  [path.join(__dirname, "src", "interface", "fcm-requests.ts"), path.join(__dirname, "src", "interface", "env.ts")],
+  [
+    path.join(__dirname, "src", "interface", "fcm-requests.ts"),
+    path.join(__dirname, "src", "interface", "env.ts"),
+    path.join(__dirname, "src", "interface", "subscription-types.ts")
+  ],
   null,
   null
 );
@@ -12,13 +16,16 @@ const generator = TJS.buildGenerator(program, {
   required: true
 });
 
-let interfaces = ["FCMMessage", "FCMTokenMessage", "FCMTopicMessage", "EnvironmentVariables"];
+let interfaces = [
+  "FCMMessage",
+  "FCMTokenMessage",
+  "FCMTopicMessage",
+  "EnvironmentVariables",
+  "iOSSubscription",
+  "WebSubscription"
+];
 
 let result = generator.getSchemaForSymbols(interfaces);
-
-let FCMMessage = generator.getSchemaForSymbol("FCMMessage");
-let FCMTokenMessage = generator.getSchemaForSymbol("FCMTokenMessage");
-let FCMTopicMessage = generator.getSchemaForSymbol("FCMTopicMessage");
 
 fs.writeFileSync(
   path.join(__dirname, "src", "validators", "validators.ts"),

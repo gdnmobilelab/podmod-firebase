@@ -3,16 +3,13 @@ import * as url from "url";
 import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
 import { FCMMessage, FCMTokenMessage, MessageSendRequest, FCMTopicMessage } from "../interface/fcm-requests";
 import { FCMSendMessageResponse } from "../interface/fcm-responses";
-import { Validator } from "jsonschema";
-import Validators from "../validators/validators";
+import { validate, ValidatorDefinition } from "../validators/validate";
 import Environment from "../util/env";
 import { join } from "path";
 import { ValidationFailedError } from "../util/errors";
 import { namespaceTopic } from "../util/namespace";
-import { InternalServerError } from "restify-errors";
-
-const validator = new Validator();
-validator.addSchema(Validators);
+import { InternalServerError, BadRequestError } from "restify-errors";
+import { Z_ERRNO } from "zlib";
 
 export async function sendMessage(message: FCMTokenMessage | FCMTopicMessage, req: PushkinRequest) {
   req.log.info(message, "Trying to send a message");
@@ -44,8 +41,8 @@ export async function sendMessage(message: FCMTokenMessage | FCMTopicMessage, re
   return jsonResponse.name;
 }
 
-function doValidationCheck(obj: any, validation: any) {
-  let validationResult = validator.validate(obj, validation);
+function doValidationCheck(obj: any, validation: ValidatorDefinition) {
+  let validationResult = validate(obj, validation);
 
   if (validationResult.errors.length > 0) {
     let err = new ValidationFailedError(
@@ -84,7 +81,7 @@ export const sendMessageToRegistration: PushkinRequestHandler<SendMessageBody, S
 
     let mergedMessage: FCMTokenMessage = Object.assign({}, req.body.message, { token: req.params.registration_id });
 
-    doValidationCheck(mergedMessage, Validators.definitions.FCMTokenMessage);
+    doValidationCheck(mergedMessage, "FCMTokenMessage");
 
     let name = await sendMessage(mergedMessage, req);
 
@@ -95,7 +92,11 @@ export const sendMessageToRegistration: PushkinRequestHandler<SendMessageBody, S
       name
     });
   } catch (err) {
-    req.log.error({ error: err.message }, "Failed to send message");
+    let target: "error" | "warn" = "error";
+    if (err instanceof BadRequestError || err instanceof ValidationFailedError) {
+      target = "warn";
+    }
+    req.log[target]({ error: err.message }, "Failed to send message");
     next(err);
   }
 };
@@ -124,7 +125,7 @@ export const sendMessageToTopic: PushkinRequestHandler<SendMessageBody, SendTopi
 
     let mergedMessage: FCMTopicMessage = Object.assign({}, req.body.message, { topic: namespacedTopic });
 
-    doValidationCheck(mergedMessage, Validators.definitions.FCMTopicMessage);
+    doValidationCheck(mergedMessage, "FCMTopicMessage");
 
     let name = await sendMessage(mergedMessage, req);
 
@@ -135,7 +136,11 @@ export const sendMessageToTopic: PushkinRequestHandler<SendMessageBody, SendTopi
       name
     });
   } catch (err) {
-    req.log.error({ error: err.message }, "Failed to send message");
+    let target: "error" | "warn" = "error";
+    if (err instanceof BadRequestError || err instanceof ValidationFailedError) {
+      target = "warn";
+    }
+    req.log[target]({ error: err.message }, "Failed to send message");
     next(err);
   }
 };

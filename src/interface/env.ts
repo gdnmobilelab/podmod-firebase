@@ -11,4 +11,5 @@ export interface EnvironmentVariables {
   SERVER_PORT?: string;
   TOPIC_PREFIX: string;
   VAPID_PUBLIC_KEY: string;
+  PERMITTED_IOS_BUNDLES?: string;
 }

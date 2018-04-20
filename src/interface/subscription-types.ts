@@ -14,5 +14,5 @@ export interface WebSubscription {
   };
   // This is never actually sent, but we're checking it to detect between the two
   // types here.
-  platform: undefined;
+  platform?: undefined;
 }

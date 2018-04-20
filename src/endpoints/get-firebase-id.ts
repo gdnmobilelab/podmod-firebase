@@ -4,14 +4,14 @@ import fetch from "node-fetch";
 import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
 import Environment from "../util/env";
 import { BadRequestError } from "restify-errors";
+import { Validator } from "jsonschema";
+import { validate } from "../validators/validate";
 
 // API documentation for this:
 // https://developers.google.com/instance-id/reference/server#create_relationship_maps_for_app_instances
 
 async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest): Promise<string> {
-  if (!sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
-    throw new Error("Must send full notification payload in subscription object.");
-  }
+  validate(sub, "WebSubscription", { throwError: true });
 
   // Chrome has started sending an expirationTime key along with the rest of the subscription
   // and FCM throws an error if it's included. So let's filter to only the keys we know we need.
@@ -44,16 +44,13 @@ async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest
 }
 
 async function getIdForiOSSubscription(sub: iOSSubscription, req: PushkinRequest): Promise<string> {
-  if (!sub.bundle_name) {
-    throw new Error("Must provide iOS bundle name in bundle_name field.");
-  }
+  validate(sub, "iOSSubscription");
 
-  if (!sub.device_id) {
-    throw new Error("Must provide iOS notification ID in device_id field.");
-  }
-
-  if ("sandbox" in sub === false) {
-    throw new Error("Must provide the sandbox attribute in iOS subscription");
+  if (Environment.PERMITTED_IOS_BUNDLES) {
+    let allBundles = Environment.PERMITTED_IOS_BUNDLES.split(",").map(s => s.trim());
+    if (allBundles.indexOf(sub.bundle_name) === -1) {
+      throw new BadRequestError("iOS bundle name is not in the list of permitted bundles.");
+    }
   }
 
   // This is actually a batch operation, but we're only sending one APNS token
@@ -133,7 +130,14 @@ export const getFirebaseId: PushkinRequestHandler<FirebaseIDRequestBody, void> =
       id: firebaseID
     });
   } catch (err) {
-    req.log.error(
+    let target: "error" | "warn" = "error";
+    if (err instanceof BadRequestError) {
+      // We only log at the error level for problems caused internally in pushkin.
+      // If it's a 400 error it means the user provided bad data, so we just warn.
+      target = "warn";
+    }
+
+    req.log[target](
       {
         subscription: req.body ? req.body.subscription : undefined,
         error: err.message

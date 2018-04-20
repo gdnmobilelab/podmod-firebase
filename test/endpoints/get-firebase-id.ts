@@ -70,7 +70,7 @@ describe("Get Firebase ID", () => {
     let testSubscription = {
       sandbox: false,
       device_id: "TEST_DEVICE_ID",
-      bundle_name: "TEST_BUNDLE",
+      bundle_name: "bundle.name.two",
       platform: "iOS"
     };
 
@@ -121,5 +121,25 @@ describe("Get Firebase ID", () => {
     let json = await res.json();
     expect(json.id).to.eq("TEST_TOKEN");
     nocked.done();
+  });
+
+  it("should fail to get iOS ID when bundle is not permitted", async () => {
+    let testSubscription = {
+      sandbox: false,
+      device_id: "TEST_DEVICE_ID",
+      bundle_name: "bundle.name.three",
+      platform: "iOS"
+    };
+
+    let res = await fetch("http://localhost:3000/registrations", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.USER_API_KEY
+      },
+      body: JSON.stringify({ subscription: testSubscription })
+    });
+
+    expect(res.status).to.eq(400);
   });
 });
