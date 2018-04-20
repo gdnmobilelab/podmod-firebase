@@ -3,7 +3,7 @@ import { FCMError, FCMWebRegistrationResponse, FCMiOSBatchRegistrationResponse }
 import fetch from "node-fetch";
 import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
 import Environment from "../util/env";
-import { BadRequestError } from "restify-errors";
+import { BadRequestError, InternalServerError } from "restify-errors";
 import { Validator } from "jsonschema";
 import { validate } from "../validators/validate";
 
@@ -33,11 +33,11 @@ async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest
   let json = (await response.json()) as FCMWebRegistrationResponse;
 
   if (json.error as FCMError) {
-    throw new Error(json.error.message);
+    throw new InternalServerError(json.error.message);
   }
 
   if (!json.token) {
-    throw new Error("No error received, but no token is present either");
+    throw new InternalServerError("No error received, but no token is present either");
   }
 
   return json.token;

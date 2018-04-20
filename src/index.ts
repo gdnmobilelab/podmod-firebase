@@ -50,8 +50,8 @@ export async function createServer(): Promise<() => void> {
 
   const cors = restifyCORS({
     origins: Environment.ALLOWED_ORIGINS ? Environment.ALLOWED_ORIGINS.split(",") : ["*"],
-    allowHeaders: ["API-Token"],
-    exposeHeaders: ["API-Token-Expiry"]
+    allowHeaders: ["Authorization"],
+    exposeHeaders: []
   });
 
   // pre() calls are run before any route matching. In this case, it ensures that any
