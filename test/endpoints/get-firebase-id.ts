@@ -59,9 +59,10 @@ describe("Get Firebase ID", () => {
       },
       body: JSON.stringify({ subscription: testSubscription })
     });
-    expect(res.status).to.eq(200);
 
     let json = await res.json();
+    expect(res.status).to.eq(200);
+
     expect(json.id).to.eq("TEST_TOKEN");
     nocked.done();
   });

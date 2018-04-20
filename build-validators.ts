@@ -13,7 +13,8 @@ const program = TJS.getProgramFromFiles(
 );
 
 const generator = TJS.buildGenerator(program, {
-  required: true
+  required: true,
+  noExtraProps: true
 });
 
 let interfaces = [

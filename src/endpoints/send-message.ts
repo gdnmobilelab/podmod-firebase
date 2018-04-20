@@ -41,18 +41,6 @@ export async function sendMessage(message: FCMTokenMessage | FCMTopicMessage, re
   return jsonResponse.name;
 }
 
-function doValidationCheck(obj: any, validation: ValidatorDefinition) {
-  let validationResult = validate(obj, validation);
-
-  if (validationResult.errors.length > 0) {
-    let err = new ValidationFailedError(
-      "Request validation failed",
-      (validationResult.errors as any[]).map(e => e.stack)
-    );
-    throw err;
-  }
-}
-
 interface SendRegistrationParams {
   registration_id: string;
 }
@@ -81,7 +69,7 @@ export const sendMessageToRegistration: PushkinRequestHandler<SendMessageBody, S
 
     let mergedMessage: FCMTokenMessage = Object.assign({}, req.body.message, { token: req.params.registration_id });
 
-    doValidationCheck(mergedMessage, "FCMTokenMessage");
+    validate(mergedMessage, "FCMTokenMessage");
 
     let name = await sendMessage(mergedMessage, req);
 
@@ -125,7 +113,7 @@ export const sendMessageToTopic: PushkinRequestHandler<SendMessageBody, SendTopi
 
     let mergedMessage: FCMTopicMessage = Object.assign({}, req.body.message, { topic: namespacedTopic });
 
-    doValidationCheck(mergedMessage, "FCMTopicMessage");
+    validate(mergedMessage, "FCMTopicMessage");
 
     let name = await sendMessage(mergedMessage, req);
 

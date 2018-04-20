@@ -8,6 +8,7 @@ import { FCMTokenMessage, FCMMessage } from "../interface/fcm-requests";
 import { sendMessage } from "./send-message";
 import Environment from "../util/env";
 import { namespaceTopic } from "../util/namespace";
+import { validate } from "../validators/validate";
 
 async function sendRequest(id: string, topicName: string, method: string, log: bunyan): Promise<boolean> {
   let namespacedTopic = namespaceTopic(topicName);
@@ -62,6 +63,8 @@ export const subscribeOrUnsubscribe: PushkinRequestHandler<
     req.log.info({ success: true }, "Firebase request was successful");
 
     if (req.body && req.body.confirmation) {
+      validate(req.body.confirmation, "FCMMessage");
+
       req.log.info({ confirmation: req.body.confirmation }, "Sending confirmation notification");
 
       let mergedMessage: FCMTokenMessage = Object.assign({}, req.body.confirmation, {

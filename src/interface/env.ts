@@ -1,3 +1,10 @@
+// This is really dumb, but we use strict validation, which means any extra keys
+// we don't know about throw errors. Since process.env has all sorts of crap in it,
+// we allow any other keys explicitly:
+
+/**
+ * @TJS-additionalProperties true
+ */
 export interface EnvironmentVariables {
   FIREBASE_AUTH_KEY: string;
   DATABASE_URL: string;

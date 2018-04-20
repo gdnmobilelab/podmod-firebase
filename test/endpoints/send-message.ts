@@ -58,7 +58,7 @@ describe("Send message", () => {
 
     expect(res.status).to.eq(400);
     let json = await res.json();
-    expect(json.message).to.eq("Request validation failed");
+    expect(json.message).to.eq("Object validation failed");
   });
 
   it("Should successfully send token message", async () => {

@@ -20,6 +20,7 @@
           "$ref": "#/definitions/FCMApnsConfig"
         }
       },
+      "additionalProperties": false,
       "required": [
         "notification"
       ]
@@ -44,6 +45,7 @@
           "$ref": "#/definitions/FCMApnsConfig"
         }
       },
+      "additionalProperties": false,
       "required": [
         "notification",
         "token"
@@ -69,12 +71,14 @@
           "$ref": "#/definitions/FCMApnsConfig"
         }
       },
+      "additionalProperties": false,
       "required": [
         "notification",
         "topic"
       ]
     },
     "EnvironmentVariables": {
+      "additionalProperties": {},
       "type": "object",
       "properties": {
         "FIREBASE_AUTH_KEY": {
@@ -149,6 +153,7 @@
           ]
         }
       },
+      "additionalProperties": false,
       "required": [
         "bundle_name",
         "device_id",
@@ -173,6 +178,7 @@
               "type": "string"
             }
           },
+          "additionalProperties": false,
           "required": [
             "auth",
             "p256dh"
@@ -182,6 +188,7 @@
           "type": "undefined"
         }
       },
+      "additionalProperties": false,
       "required": [
         "endpoint",
         "keys"
@@ -197,6 +204,7 @@
           "type": "string"
         }
       },
+      "additionalProperties": false,
       "required": [
         "body",
         "title"
@@ -226,6 +234,7 @@
           "$ref": "#/definitions/FCMAndroidNotification"
         }
       },
+      "additionalProperties": false,
       "required": [
         "data",
         "notification",
@@ -257,6 +266,7 @@
           "type": "string"
         }
       },
+      "additionalProperties": false,
       "required": [
         "click_action",
         "color",
@@ -281,7 +291,8 @@
         "notification": {
           "$ref": "#/definitions/FCMWebpushNotification"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "FCMWebpushNotification": {
       "type": "object",
@@ -298,7 +309,8 @@
         "badge": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "FCMApnsConfig": {
       "type": "object",
@@ -312,7 +324,8 @@
         "payload": {
           "$ref": "#/definitions/ApnsPayload"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "ApnsPayload": {
       "type": "object",
@@ -347,7 +360,8 @@
         "thread-id": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "ApnsAlert": {
       "type": "object",
@@ -361,7 +375,8 @@
         "launch-image": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }

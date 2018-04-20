@@ -11,8 +11,6 @@ import { validate } from "../validators/validate";
 // https://developers.google.com/instance-id/reference/server#create_relationship_maps_for_app_instances
 
 async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest): Promise<string> {
-  validate(sub, "WebSubscription", { throwError: true });
-
   // Chrome has started sending an expirationTime key along with the rest of the subscription
   // and FCM throws an error if it's included. So let's filter to only the keys we know we need.
 
@@ -20,6 +18,9 @@ async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest
     endpoint: sub.endpoint,
     keys: sub.keys
   };
+
+  // check we have the right data types
+  validate(subscriptionToSend, "WebSubscription");
 
   let response = await fetch("https://iid.googleapis.com/v1/web/iid", {
     method: "POST",
