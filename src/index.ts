@@ -12,15 +12,19 @@ import { createClient as createDatabaseClient, addClientToRequest } from "./util
 import { checkForKey, ApiKeyType } from "./security/key-check";
 import { JWT } from "google-auth-library";
 import Environment, { check as checkEnvironmentVariables } from "./util/env";
+import { promisify } from "util";
 
-if (!Environment.NODE_ENV) {
-  throw new Error("NODE_ENV environment variable is not set");
-}
+// When running tests we need to spin up and spin down the server on demand, so
+// we wrap the actual creation in a function.
 
 export async function createServer(): Promise<() => void> {
-  const client = createDatabaseClient();
-  const { log, dbStream } = createLogger(client);
+  const databaseClient = createDatabaseClient();
 
+  // our custom bunyan instance
+  const { log, dbStream } = createLogger(databaseClient);
+
+  // create our restify server and have it use our logger, rather than
+  // its own created one.
   const server = restify.createServer({ log });
 
   // Annoying, some of our Firebase operations require the server key, whereas others
@@ -71,7 +75,7 @@ export async function createServer(): Promise<() => void> {
     cors.actual,
     // make our database client available on req.db. Most DB stuff goes through req.log() but
     // not all
-    addClientToRequest(client, jwt)
+    addClientToRequest(databaseClient, jwt)
   );
 
   server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);
@@ -103,19 +107,8 @@ export async function createServer(): Promise<() => void> {
 
   // Both the pg and restify connection functions take callbacks, so we need to promisify them:
 
-  let webListenPromise = new Promise((fulfill, reject) => {
-    server.listen(port, fulfill);
-  });
-
-  let dbConnectPromise = new Promise((fulfill, reject) => {
-    client.connect(err => {
-      if (err) {
-        reject(err);
-      } else {
-        fulfill();
-      }
-    });
-  });
+  let webListenPromise = promisify(server.listen).apply(server);
+  let dbConnectPromise = promisify(databaseClient.connect).apply(databaseClient);
 
   try {
     // If we can't successfully connect to the database or listen on the specified port, crash out.
@@ -130,13 +123,20 @@ export async function createServer(): Promise<() => void> {
   // closes the server. We're only using this in tests so this is probably fine for now.
 
   return async function() {
-    await new Promise(fulfill => dbStream.end(fulfill));
-    await Promise.all([new Promise(fulfill => client.end(fulfill)), new Promise(fulfill => server.close(fulfill))]);
-    // log.warn({ action: "server-stop" }, "Stopped server");
+    await Promise.all([
+      promisify(dbStream.end).apply(dbStream),
+      promisify(databaseClient.end).apply(databaseClient),
+      promisify(server.close).apply(server)
+    ]);
+
+    log.warn({ action: "server-stop" }, "Stopped server");
   };
 }
 
 if (require.main === module) {
+  // If this is the entry point of the app (i.e. we're not running tests)
+  // then go ahead and create the server automatically
+
   checkEnvironmentVariables();
   createServer();
 }

@@ -8,7 +8,11 @@ export enum ApiKeyType {
 }
 
 export function checkForKey(keyType: ApiKeyType): restify.RequestHandler {
-  return (req, res, next) => {
+  // Slightly confusing, but this is a function that returns a function. That way we can specify
+  // the level of authorisation we want when setting up routes, but have the actual authorisation
+  // function run when the request is received.
+
+  return function(req, res, next) {
     let auth = req.headers.authorization;
 
     if (!auth) {

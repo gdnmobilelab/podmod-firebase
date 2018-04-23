@@ -1,11 +1,9 @@
-import { Writable } from "stream";
 import migrate from "node-pg-migrate";
 import { Client } from "pg";
-import * as ChildProcess from "child_process";
-import * as sinon from "sinon";
+import sinon from "sinon";
 import * as GoogleAuth from "google-auth-library";
 import { check as checkEnvironmentVariables } from "../src/util/env";
-import * as nock from "nock";
+import nock from "nock";
 
 require("dotenv").config({ path: __dirname + "/test.env" });
 
@@ -22,9 +20,14 @@ let jwt: sinon.SinonStub;
 before(async function() {
   checkEnvironmentVariables();
 
+  // By default nock lets any network traffic to domains not specifically mocked
+  // pass through. Just to make sure nothing ever escapes our test environment,
+  // we disable that. Then specifically allow connections to our local server.
   nock.disableNetConnect();
   nock.enableNetConnect("localhost:3000");
 
+  // Then we stub out the JWT functionality, and have it return a dummy token
+  // whenever this is called.
   jwt = sinon.stub(GoogleAuth, "JWT").returns({
     getAccessToken() {
       return Promise.resolve({ token: "TEST_TOKEN" });
@@ -35,10 +38,15 @@ before(async function() {
   });
 
   if (globalStore.dbClient) {
+    // If we're in watch mode then before() is run multiple times. If this
+    // has already been run then we know the database is already set up and
+    // ready, so we can skip these steps.
+
     return;
   }
 
   async function tryToConnect() {
+    // just a little visual indicator to the user that we're actively working on something
     process.stdout.write(".");
 
     let client = new Client(process.env.DATABASE_URL);
@@ -49,7 +57,6 @@ before(async function() {
     } catch (err) {
       if (err.routine && err.routine !== "ProcessStartupPacket") {
         // this is an actual Postgres error that we're not expecting.
-        console.log(err);
         throw err;
       }
 
@@ -68,6 +75,10 @@ before(async function() {
 
   await tryToConnect();
   process.stdout.write("\nRunning database migrations...");
+
+  // Since we don't know the state of our test database, we ensure that it's migrated to the latest
+  // schema.
+
   await migrate({
     databaseUrl: process.env.DATABASE_URL,
     migrationsTable: "pgmigrations",
@@ -89,26 +100,31 @@ beforeEach(async () => {
   WHERE table_schema='public' AND table_type='BASE TABLE';
   `);
 
-  // Don't want to empty out the migrations table!
-  let tables = results.rows.filter(r => r.table_name !== "pgmigrations").map(r => r.table_name);
+  let tables = results.rows
+    .map(r => r.table_name)
+    // Don't want to empty out the migrations table!
+    .filter(n => n !== "pgmigrations");
 
   for (let table of tables) {
     await globalStore.dbClient.query(`TRUNCATE TABLE ${table}`);
   }
 });
 
-afterEach(async () => {});
-
 after(() => {
+  // get rid of the JWT web token. Really only need this because the next run in
+  // watch mode would try to stub a stub otherwise.
   jwt.restore();
 
+  // Also restore net connectivity - probably don't need this part.
   nock.cleanAll();
   nock.enableNetConnect();
 
   // If we're in watch mode we want to keep the db connection alive. If not,
-  // it'll hang forever unless we kill them.
+  // it'll hang forever unless we kill it.
 
-  if (process.argv.indexOf("--watch") == -1) {
-    globalStore.dbClient.end();
+  if (process.argv.indexOf("--watch") > -1) {
+    return;
   }
+
+  globalStore.dbClient.end();
 });
