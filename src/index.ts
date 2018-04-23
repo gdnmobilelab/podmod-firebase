@@ -68,7 +68,11 @@ export async function createServer(): Promise<() => void> {
 
   server.use(
     restify.plugins.bodyParser({
+      // by default the body parser adds values to req.params. I don't know why, it makes a lot
+      // more sense to separate out req.params and req.body.
       mapParams: false,
+      // If a POST request isn't sent with an application/json header, we reject it. Form encoding
+      // etc can't reproduce the complex JSON data structures, so there's no point supporting it
       rejectUnknown: true
     }),
     restify.plugins.requestLogger(),
@@ -89,6 +93,7 @@ export async function createServer(): Promise<() => void> {
   server.get("/vapid-key", checkForKey(ApiKeyType.User), getVAPIDKey);
 
   server.get("/healthcheck", (req, res, next) => {
+    // Used by Meta to ensure the service is working. Just needs to return a 200.
     res.end("OK");
   });
 
