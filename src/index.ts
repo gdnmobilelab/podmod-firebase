@@ -112,7 +112,7 @@ export async function createServer(): Promise<() => void> {
 
   // Both the pg and restify connection functions take callbacks, so we need to promisify them:
 
-  let webListenPromise = promisify(server.listen).apply(server);
+  let webListenPromise = promisify(server.listen).apply(server, [port]);
   let dbConnectPromise = promisify(databaseClient.connect).apply(databaseClient);
 
   try {
@@ -128,13 +128,12 @@ export async function createServer(): Promise<() => void> {
   // closes the server. We're only using this in tests so this is probably fine for now.
 
   return async function() {
-    await Promise.all([
-      promisify(dbStream.end).apply(dbStream),
-      promisify(databaseClient.end).apply(databaseClient),
-      promisify(server.close).apply(server)
-    ]);
+    // We finish the DB stream before the other promises because we need to make
+    // sure it's finished before we close the DB connection.
+    await promisify(dbStream.end).apply(dbStream);
+    await Promise.all([promisify(databaseClient.end).apply(databaseClient), promisify(server.close).apply(server)]);
 
-    log.warn({ action: "server-stop" }, "Stopped server");
+    // log.warn({ action: "server-stop" }, "Stopped server");
   };
 }
 

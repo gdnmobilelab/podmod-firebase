@@ -1,9 +1,9 @@
 import migrate from "node-pg-migrate";
 import { Client } from "pg";
-import sinon from "sinon";
+import * as sinon from "sinon";
 import * as GoogleAuth from "google-auth-library";
 import { check as checkEnvironmentVariables } from "../src/util/env";
-import nock from "nock";
+import * as nock from "nock";
 
 require("dotenv").config({ path: __dirname + "/test.env" });
 
