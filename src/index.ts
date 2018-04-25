@@ -13,6 +13,9 @@ import { checkForKey, ApiKeyType } from "./security/key-check";
 import { JWT } from "google-auth-library";
 import Environment, { check as checkEnvironmentVariables } from "./util/env";
 import { promisify } from "util";
+import * as fs from "fs";
+
+let { version } = JSON.parse(fs.readFileSync(__dirname + "/../package.json", "UTF-8"));
 
 // When running tests we need to spin up and spin down the server on demand, so
 // we wrap the actual creation in a function.
@@ -118,7 +121,7 @@ export async function createServer(): Promise<() => void> {
   try {
     // If we can't successfully connect to the database or listen on the specified port, crash out.
     await Promise.all([webListenPromise, dbConnectPromise]);
-    log.warn({ action: "server-start", port, env: Environment.NODE_ENV }, "Server started.");
+    log.warn({ action: "server-start", port, env: Environment.NODE_ENV, version }, "Server started.");
   } catch (err) {
     log.error({ error: err.message }, "Server failed to start");
     throw err;
