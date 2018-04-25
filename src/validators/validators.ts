@@ -78,7 +78,7 @@
       ]
     },
     "EnvironmentVariables": {
-      "additionalProperties": {},
+      "additionalProperties": true,
       "type": "object",
       "properties": {
         "FIREBASE_AUTH_KEY": {
@@ -236,8 +236,6 @@
       },
       "additionalProperties": false,
       "required": [
-        "data",
-        "notification",
         "priority"
       ]
     },

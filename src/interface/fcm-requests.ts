@@ -20,8 +20,8 @@ interface FCMAndroidConfig {
   priority: "normal" | "high"; // normal by default
   ttl?: string; // 4 weeks by default
   restricted_package_name?: string;
-  data: any;
-  notification: FCMAndroidNotification;
+  data?: any;
+  notification?: FCMAndroidNotification;
 }
 
 interface FCMWebpushNotification {

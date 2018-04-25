@@ -20,7 +20,7 @@ Pushkin runs on staging and production:
 * `https://pushkin.stg.newsdev.nytimes.com/`
 * `https://pushkin.newsdev.nytimes.com/`
 
-However, we still need to determine how each environment will be set up. There are additional complications with apps, since different versions of it use different push accounts. TBD.
+However, staging can only be used with the debug versions of the apps. Read [this page on the wiki](https://github.com/newsdev/pushkin/wiki/App-and-server-environments) for more details.
 
 ## Using it
 
