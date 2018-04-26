@@ -59,7 +59,7 @@ export async function createServer(): Promise<() => void> {
   const cors = restifyCORS({
     origins: Environment.ALLOWED_ORIGINS ? Environment.ALLOWED_ORIGINS.split(",") : ["*"],
     allowHeaders: ["Authorization"],
-    exposeHeaders: [],
+    exposeHeaders: ["Cache-Control"],
     preflightMaxAge: 5
   });
 
