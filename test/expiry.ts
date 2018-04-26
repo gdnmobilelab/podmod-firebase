@@ -31,7 +31,7 @@ describe("HTTP server", () => {
     server.listen(3000);
 
     let res = await fetch("http://localhost:3000/example");
-    expect(res.headers.get("cache-control")).to.eq("no-cache");
+    expect(res.headers.get("cache-control")).to.eq("no-cache, no-store, must-revalidate");
   });
 
   it("Should not send no-cache on OPTIONS requests", async () => {
