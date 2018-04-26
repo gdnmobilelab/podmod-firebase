@@ -6,6 +6,7 @@ import { getSubscribed } from "./endpoints/get-subscribed";
 import { sendMessageToRegistration, sendMessageToTopic } from "./endpoints/send-message";
 import { getTopicDetails } from "./endpoints/topic-details";
 import { getVAPIDKey } from "./endpoints/vapid-key";
+import { applyCachingHeaders } from "./util/http-cache-headers";
 // import { batchOperation } from "./endpoints/batch";
 import { createLogger } from "./log/log";
 import { createClient as createDatabaseClient, addClientToRequest } from "./util/db";
@@ -58,7 +59,8 @@ export async function createServer(): Promise<() => void> {
   const cors = restifyCORS({
     origins: Environment.ALLOWED_ORIGINS ? Environment.ALLOWED_ORIGINS.split(",") : ["*"],
     allowHeaders: ["Authorization"],
-    exposeHeaders: []
+    exposeHeaders: [],
+    preflightMaxAge: 5
   });
 
   // pre() calls are run before any route matching. In this case, it ensures that any
@@ -82,7 +84,9 @@ export async function createServer(): Promise<() => void> {
     cors.actual,
     // make our database client available on req.db. Most DB stuff goes through req.log() but
     // not all
-    addClientToRequest(databaseClient, jwt)
+    addClientToRequest(databaseClient, jwt),
+
+    applyCachingHeaders
   );
 
   server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);

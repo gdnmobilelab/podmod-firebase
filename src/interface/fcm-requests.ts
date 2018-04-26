@@ -29,6 +29,8 @@ interface FCMWebpushNotification {
   body?: string;
   icon?: string;
   badge?: string;
+  tag?: string;
+  image?: string;
 }
 
 interface FCMWebpushConfig {
