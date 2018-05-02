@@ -8,16 +8,16 @@ interface FCMNotification {
 interface FCMAndroidNotification {
   title?: string;
   body?: string;
-  icon: string; // must be internal resource
-  color: string; // must be in hex format
-  sound: string;
-  tag: string;
-  click_action: string;
+  icon?: string; // must be internal resource
+  color?: string; // must be in hex format
+  sound?: string;
+  tag?: string;
+  click_action?: string;
 }
 
 interface FCMAndroidConfig {
   collapse_key?: string;
-  priority: "normal" | "high"; // normal by default
+  priority: "normal" | "HIGH"; // normal by default
   ttl?: string; // 4 weeks by default
   restricted_package_name?: string;
   data?: any;
@@ -31,6 +31,7 @@ interface FCMWebpushNotification {
   badge?: string;
   tag?: string;
   image?: string;
+  data?: { [key: string]: any };
 }
 
 interface FCMWebpushConfig {

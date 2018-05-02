@@ -218,7 +218,7 @@
         },
         "priority": {
           "enum": [
-            "high",
+            "HIGH",
             "normal"
           ],
           "type": "string"
@@ -264,14 +264,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "click_action",
-        "color",
-        "icon",
-        "sound",
-        "tag"
-      ]
+      "additionalProperties": false
     },
     "FCMWebpushConfig": {
       "type": "object",
@@ -306,6 +299,16 @@
         },
         "badge": {
           "type": "string"
+        },
+        "tag": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {}
         }
       },
       "additionalProperties": false
