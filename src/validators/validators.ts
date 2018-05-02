@@ -218,7 +218,7 @@
         },
         "priority": {
           "enum": [
-            "HIGH",
+            "high",
             "normal"
           ],
           "type": "string"

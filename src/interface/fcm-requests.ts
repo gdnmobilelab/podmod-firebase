@@ -17,7 +17,7 @@ interface FCMAndroidNotification {
 
 interface FCMAndroidConfig {
   collapse_key?: string;
-  priority: "normal" | "HIGH"; // normal by default
+  priority: "normal" | "high"; // normal by default
   ttl?: string; // 4 weeks by default
   restricted_package_name?: string;
   data?: any;
