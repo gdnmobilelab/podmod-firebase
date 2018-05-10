@@ -19,6 +19,8 @@ describe("Authorisation", () => {
   afterEach(done => {
     server.close(done);
     server = undefined;
+    process.env.ALLOW_ADMIN_OPERATIONS = undefined;
+    process.env.ALLOW_USER_OPERATIONS = undefined;
   });
 
   it("Should deny at the user level", async () => {
@@ -81,5 +83,65 @@ describe("Authorisation", () => {
     });
 
     expect(res.status).to.eq(200);
+  });
+
+  it("Should not expose admin operations when ALLOW_ADMIN_OPERATIONS is false", async () => {
+    process.env.ALLOW_ADMIN_OPERATIONS = "false";
+
+    server.get("/allow-admin", checkForKey(ApiKeyType.Admin), (req, res) => {
+      res.end("yes");
+    });
+
+    server.get("/allow-user", checkForKey(ApiKeyType.User), (req, res) => {
+      res.end("yes");
+    });
+
+    server.listen(3000);
+
+    let res = await fetch("http://localhost:3000/allow-admin", {
+      headers: {
+        authorization: Environment.ADMIN_API_KEY
+      }
+    });
+
+    expect(res.status).to.eq(404);
+
+    res = await fetch("http://localhost:3000/allow-user", {
+      headers: {
+        authorization: Environment.USER_API_KEY
+      }
+    });
+
+    expect(res.status).to.eq(200);
+  });
+
+  it("Should not expose user operations when ALLOW_USER_OPERATIONS is false", async () => {
+    process.env.ALLOW_USER_OPERATIONS = "false";
+
+    server.get("/allow-admin", checkForKey(ApiKeyType.Admin), (req, res) => {
+      res.end("yes");
+    });
+
+    server.get("/allow-user", checkForKey(ApiKeyType.User), (req, res) => {
+      res.end("yes");
+    });
+
+    server.listen(3000);
+
+    let res = await fetch("http://localhost:3000/allow-admin", {
+      headers: {
+        authorization: Environment.ADMIN_API_KEY
+      }
+    });
+
+    expect(res.status).to.eq(200);
+
+    res = await fetch("http://localhost:3000/allow-user", {
+      headers: {
+        authorization: Environment.USER_API_KEY
+      }
+    });
+
+    expect(res.status).to.eq(404);
   });
 });

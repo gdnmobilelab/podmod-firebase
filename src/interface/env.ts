@@ -19,4 +19,6 @@ export interface EnvironmentVariables {
   TOPIC_PREFIX: string;
   VAPID_PUBLIC_KEY: string;
   PERMITTED_IOS_BUNDLES?: string;
+  ALLOW_ADMIN_OPERATIONS?:string;
+  ALLOW_USER_OPERATIONS?:string;
 }
