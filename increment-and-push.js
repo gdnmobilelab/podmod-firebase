@@ -1,3 +1,5 @@
 const shell = require("shelljs");
 
-console.log(shell.exec("git status --porcelain").stdout);
+if (shell.exec("git status --porcelain").stdout !== "") {
+  console.log("no!");
+}
