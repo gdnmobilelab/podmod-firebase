@@ -1,11 +1,11 @@
 {
   "name": "pushkin-firebase",
-  "version": "1.0.10",
+  "version": "1.0.111",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
     "start": "npm run migrate && node ./lib",
-    "migrate": "node-pg-migrate up",
+    "migrate": "echo $DATABASE_URL && node-pg-migrate up",
     "build": "tsc",
     "docker-compose-prefix":
       "docker-compose -f ./dev.docker-compose.yml run --service-ports --rm -e NODE_ENV=$NODE_ENV pushkin npx",
