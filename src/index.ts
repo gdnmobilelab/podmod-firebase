@@ -125,7 +125,7 @@ export async function createServer(): Promise<() => void> {
     await Promise.all([webListenPromise, dbConnectPromise]);
     log.warn({ action: "server-start", port, env: Environment.NODE_ENV, version }, "Server started.");
   } catch (err) {
-    log.error({ error: err.message }, "Server failed to start");
+    log.error({ error: err.message, stack:err.stack }, "Server failed to start");
     throw err;
   }
 
@@ -145,7 +145,11 @@ export async function createServer(): Promise<() => void> {
 if (require.main === module) {
   // If this is the entry point of the app (i.e. we're not running tests)
   // then go ahead and create the server automatically
-
-  checkEnvironmentVariables();
-  createServer();
+  try {
+    checkEnvironmentVariables();
+    createServer();
+  } catch (err) {
+    console.log(err);
+    process.exit(1);
+  }
 }
