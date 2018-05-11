@@ -34,7 +34,7 @@ console.log("Updating package.json to version " + newVersion + "...");
 fs.writeFileSync(path.join(__dirname, "package.json"), JSON.stringify(package, null, 2));
 
 console.log("Committing built version...");
-
+tryExec("git add -A");
 tryExec('git commit -a -m "Auto-built and version incremented"');
 
 console.log("Pushing...");
