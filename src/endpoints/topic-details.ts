@@ -6,7 +6,7 @@ interface TopicDetailsParams {
 
 export const getTopicDetails: PushkinRequestHandler<void, TopicDetailsParams> = async function(req, res, next) {
   try {
-    let rows = await req.db.query(
+    let { rows } = await req.db.query(
       `
 
         SELECT COUNT (DISTINCT g.data->>'id') AS number, g.data->>'action' AS action

@@ -15,19 +15,7 @@ export function createClient() {
 
 export function addClientToRequest(client: pg.Client, jwt: JWT) {
   return function(req: PushkinRequest<any, any>, res: restify.Response, next: restify.Next) {
-    req.db = {
-      client: client,
-      query: (text, params) => {
-        return new Promise((fulfill, reject) => {
-          client.query(text, params, function(err, result) {
-            if (err) {
-              return reject(err);
-            }
-            fulfill(result.rows);
-          });
-        });
-      }
-    };
+    req.db = client;
     req.jwt = jwt;
     next();
   };

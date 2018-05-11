@@ -6,6 +6,7 @@ import { getSubscribed } from "./endpoints/get-subscribed";
 import { sendMessageToRegistration, sendMessageToTopic } from "./endpoints/send-message";
 import { getTopicDetails } from "./endpoints/topic-details";
 import { getVAPIDKey } from "./endpoints/vapid-key";
+import { healthcheck } from "./endpoints/health-check";
 import { applyCachingHeaders } from "./util/http-cache-headers";
 // import { batchOperation } from "./endpoints/batch";
 import { createLogger } from "./log/log";
@@ -99,10 +100,7 @@ export async function createServer(): Promise<() => void> {
   server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
   server.get("/vapid-key", checkForKey(ApiKeyType.User), getVAPIDKey);
 
-  server.get("/healthcheck", (req, res, next) => {
-    // Used by Meta to ensure the service is working. Just needs to return a 200.
-    res.end("OK");
-  });
+  server.get("/healthcheck", healthcheck);
 
   // server.post("/topics/:topic_name/batch/subscribe", checkForKey(ApiKeyType.Admin), batchOperation("subscribe"));
   // server.post("/topics/:topic_name/batch/unsubscribe", checkForKey(ApiKeyType.Admin), batchOperation("unsubscribe"));
