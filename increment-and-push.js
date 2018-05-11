@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 function tryExec(cmd) {
-  let { code, stdout } = shell.exec(cmd);
+  let { code, stdout } = shell.exec(cmd, { silent: true });
   if (code !== 0) {
     console.log("command failed.");
     console.log(stdout);
@@ -13,10 +13,13 @@ function tryExec(cmd) {
   return stdout;
 }
 
-if (shell.exec("git status --porcelain").stdout !== "") {
+if (tryExec("git status --porcelain") !== "") {
   console.log("Git is not clean. Be sure to commit everything before running this script.");
   shell.exit(1);
 }
+
+console.log("Cleaning existing build...");
+shell.rm("-rf", path.join(__dirname, "lib"));
 
 console.log("Building TypeScript files...");
 tryExec("npm run build");
@@ -33,3 +36,17 @@ fs.writeFileSync(path.join(__dirname, "package.json"), JSON.stringify(package, n
 console.log("Committing built version...");
 
 tryExec('git commit -a -m "Auto-built and version incremented"');
+
+console.log("Pushing...");
+
+tryExec("git push origin master");
+
+console.log("Tagging v" + package.version + "...");
+
+tryExec("git tag v" + package.version);
+
+console.log("Pushing tags...");
+
+tryExec("git push --tags");
+
+console.log("Finished.");
