@@ -1,8 +1,9 @@
-FROM mhart/alpine-node:8
+FROM node:8
 
 ADD lib lib
 ADD migrations migrations
 ADD package.json package.json
+ADD package-lock.json package-lock.json
 
 RUN npm install --production --no-optional
 RUN echo "" > .env
