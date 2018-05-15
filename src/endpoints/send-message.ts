@@ -32,6 +32,7 @@ export async function sendMessage(message: FCMTokenMessage | FCMTopicMessage, re
   let jsonResponse: FCMSendMessageResponse = await res.json();
 
   if (jsonResponse.error) {
+    console.error(jsonResponse.error)
     req.log.error(jsonResponse.error, "Encountered error when trying to send message");
     throw new InternalServerError(jsonResponse.error.message);
   }

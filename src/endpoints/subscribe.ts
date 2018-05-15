@@ -21,15 +21,18 @@ async function sendRequest(id: string, topicName: string, method: string, log: b
     }
   });
 
-  // let txt = await res.text();
-
-  // console.log(txt);
-
-  let json = await res.json();
-
   if (res.status === 200) {
     return true;
   }
+
+  let contentType = res.headers.get("content-type");
+
+  if (contentType !== "application/json" && res.status === 403) {
+    // The forbidden responses come in as HTML (for whatever reason)
+    throw new BadRequestError("Received a 403 Forbidden error from Firebase");
+  }
+
+  let json = await res.json();
 
   if (json.error === "InvalidToken") {
     throw new BadRequestError(`FCM did not recognise client token`);
@@ -83,6 +86,7 @@ export const subscribeOrUnsubscribe: PushkinRequestHandler<
       subscribed: action === "subscribe"
     });
   } catch (err) {
+    req.log.error({ error: err.message }, "Failure when trying to set subscription action");
     next(err);
   }
 };
