@@ -22,13 +22,18 @@ async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest
   // check we have the right data types
   validate(subscriptionToSend, "WebSubscription");
 
-  let response = await fetch("https://iid.googleapis.com/v1/web/iid", {
+  let response = await fetch("https://fcm.googleapis.com/fcm/connect/subscribe", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `key=${Environment.FIREBASE_AUTH_KEY}`
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify(subscriptionToSend)
+    body: JSON.stringify({
+      authorized_entity: Environment.FIREBASE_SENDER_ID,
+      endpoint: subscriptionToSend.endpoint,
+      encryption_key: subscriptionToSend.keys.p256dh,
+      encryption_auth: subscriptionToSend.keys.auth,
+      application_pub_key: Environment.VAPID_PUBLIC_KEY
+    })
   });
 
   let json = (await response.json()) as FCMWebRegistrationResponse;

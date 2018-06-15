@@ -14,7 +14,9 @@ import { JSONifyError } from "../util/jsonify-error";
 async function sendRequest(id: string, topicName: string, method: string, log: bunyan): Promise<boolean> {
   let namespacedTopic = namespaceTopic(topicName);
 
-  let res = await fetch(`https://iid.googleapis.com/iid/v1/${id}/rel/topics/${namespacedTopic}`, {
+  let url = `https://iid.googleapis.com/iid/v1/${id}/rel/topics/${namespacedTopic}`;
+  log.info({ url, method }, "Sending request to Firebase");
+  let res = await fetch(url, {
     method: method,
     headers: {
       "Content-Type": "application/json",
