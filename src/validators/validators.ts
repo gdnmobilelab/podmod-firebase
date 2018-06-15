@@ -84,6 +84,9 @@
         "FIREBASE_AUTH_KEY": {
           "type": "string"
         },
+        "FIREBASE_SENDER_ID": {
+          "type": "string"
+        },
         "DATABASE_URL": {
           "type": "string"
         },
@@ -134,6 +137,7 @@
         "FIREBASE_AUTH_KEY",
         "FIREBASE_CLIENT_EMAIL",
         "FIREBASE_PRIVATE_KEY",
+        "FIREBASE_SENDER_ID",
         "NODE_ENV",
         "TOPIC_PREFIX",
         "USER_API_KEY",

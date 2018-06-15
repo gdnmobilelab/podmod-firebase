@@ -7,6 +7,7 @@
  */
 export interface EnvironmentVariables {
   FIREBASE_AUTH_KEY: string;
+  FIREBASE_SENDER_ID: string;
   DATABASE_URL: string;
   USER_API_KEY: string;
   ADMIN_API_KEY: string;
@@ -19,6 +20,6 @@ export interface EnvironmentVariables {
   TOPIC_PREFIX: string;
   VAPID_PUBLIC_KEY: string;
   PERMITTED_IOS_BUNDLES?: string;
-  ALLOW_ADMIN_OPERATIONS?:string;
-  ALLOW_USER_OPERATIONS?:string;
+  ALLOW_ADMIN_OPERATIONS?: string;
+  ALLOW_USER_OPERATIONS?: string;
 }
