@@ -32,6 +32,7 @@ interface FCMWebpushNotification {
   tag?: string;
   image?: string;
   data?: { [key: string]: any };
+  events?: any;
 }
 
 interface FCMWebpushConfig {

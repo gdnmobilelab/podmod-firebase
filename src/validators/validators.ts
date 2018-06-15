@@ -119,6 +119,12 @@
         },
         "PERMITTED_IOS_BUNDLES": {
           "type": "string"
+        },
+        "ALLOW_ADMIN_OPERATIONS": {
+          "type": "string"
+        },
+        "ALLOW_USER_OPERATIONS": {
+          "type": "string"
         }
       },
       "required": [
@@ -309,7 +315,8 @@
         "data": {
           "type": "object",
           "additionalProperties": {}
-        }
+        },
+        "events": {}
       },
       "additionalProperties": false
     },

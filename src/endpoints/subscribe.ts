@@ -9,6 +9,7 @@ import { sendMessage } from "./send-message";
 import Environment from "../util/env";
 import { namespaceTopic } from "../util/namespace";
 import { validate } from "../validators/validate";
+import { JSONifyError } from "../util/jsonify-error";
 
 async function sendRequest(id: string, topicName: string, method: string, log: bunyan): Promise<boolean> {
   let namespacedTopic = namespaceTopic(topicName);
@@ -86,7 +87,7 @@ export const subscribeOrUnsubscribe: PushkinRequestHandler<
       subscribed: action === "subscribe"
     });
   } catch (err) {
-    req.log.error({ error: err.message }, "Failure when trying to set subscription action");
+    req.log.error({ error: JSONifyError(err) }, "Failure when trying to set subscription action");
     next(err);
   }
 };

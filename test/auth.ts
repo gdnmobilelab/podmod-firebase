@@ -23,7 +23,8 @@ describe("Authorisation", () => {
     process.env.ALLOW_USER_OPERATIONS = undefined;
   });
 
-  it("Should deny at the user level", async () => {
+  it.only("Should deny at the user level", async () => {
+    
     server.get("/deny-user", checkForKey(ApiKeyType.User), (req, res) => {
       res.end("yes");
     });
