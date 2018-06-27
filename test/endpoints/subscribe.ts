@@ -56,6 +56,7 @@ describe("Toggle subscription state", () => {
 
     // expect(res.status).to.eq(200);
     let json = await res.json();
+    console.log(json);
     expect(res.status).to.eq(200);
     expect(json.subscribed).to.eq(true);
 

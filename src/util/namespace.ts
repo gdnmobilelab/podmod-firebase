@@ -37,3 +37,11 @@ export function extractNamespacedTopic(namespacedTopic: string) {
     topic: regexResult[2]
   };
 }
+
+const CONDITION_REGEX = /'(.+?)'/g;
+
+export function namespaceCondition(condition: string) {
+  return condition.replace(CONDITION_REGEX, (_, extract) => {
+    return "'" + namespaceTopic(extract) + "'";
+  });
+}

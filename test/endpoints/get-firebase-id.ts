@@ -2,6 +2,7 @@ import * as nock from "nock";
 import fetch from "node-fetch";
 import { expect } from "chai";
 import { createServer } from "../../src/index";
+import Environment from "../../src/util/env";
 
 describe("Get Firebase ID", () => {
   let stop: () => void;
@@ -30,17 +31,19 @@ describe("Get Firebase ID", () => {
     // than the entire subscription object. So the 'expireTime' key above should
     // not appear.
 
-    let nocked = nock("https://iid.googleapis.com", {
+    let nocked = nock("https://fcm.googleapis.com", {
       reqheaders: {
-        "Content-Type": "application/json",
-        authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
+        "Content-Type": "application/json"
       }
     })
       .post(
-        "/v1/web/iid",
+        "/fcm/connect/subscribe",
         JSON.stringify({
+          authorized_entity: Environment.FIREBASE_SENDER_ID,
           endpoint: testSubscription.endpoint,
-          keys: testSubscription.keys
+          encryption_key: testSubscription.keys.p256dh,
+          encryption_auth: testSubscription.keys.auth,
+          application_pub_key: Environment.VAPID_PUBLIC_KEY
         })
       )
       .reply(

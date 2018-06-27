@@ -1,17 +1,26 @@
 import fetch, { Response } from "node-fetch";
 import * as url from "url";
 import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
-import { FCMMessage, FCMTokenMessage, MessageSendRequest, FCMTopicMessage } from "../interface/fcm-requests";
+import {
+  FCMMessage,
+  FCMTokenMessage,
+  MessageSendRequest,
+  FCMTopicMessage,
+  FCMConditionMessage
+} from "../interface/fcm-requests";
 import { FCMSendMessageResponse } from "../interface/fcm-responses";
 import { validate, ValidatorDefinition } from "../validators/validate";
 import Environment from "../util/env";
 import { join } from "path";
 import { ValidationFailedError } from "../util/errors";
-import { namespaceTopic } from "../util/namespace";
+import { namespaceTopic, namespaceCondition } from "../util/namespace";
 import { InternalServerError, BadRequestError } from "restify-errors";
 import { Z_ERRNO } from "zlib";
 
-export async function sendMessage(message: FCMTokenMessage | FCMTopicMessage, req: PushkinRequest) {
+export async function sendMessage(
+  message: FCMTokenMessage | FCMTopicMessage | FCMConditionMessage,
+  req: PushkinRequest
+) {
   req.log.info(message, "Trying to send a message");
 
   let sendBody: MessageSendRequest = {
@@ -32,7 +41,6 @@ export async function sendMessage(message: FCMTokenMessage | FCMTopicMessage, re
   let jsonResponse: FCMSendMessageResponse = await res.json();
 
   if (jsonResponse.error) {
-    console.error(JSON.stringify(jsonResponse.error, null, 2));
     req.log.error(jsonResponse.error, "Encountered error when trying to send message");
     throw new InternalServerError(jsonResponse.error.message);
   }
@@ -115,6 +123,54 @@ export const sendMessageToTopic: PushkinRequestHandler<SendMessageBody, SendTopi
     let mergedMessage: FCMTopicMessage = Object.assign({}, req.body.message, { topic: namespacedTopic });
 
     validate(mergedMessage, "FCMTopicMessage");
+
+    let name = await sendMessage(mergedMessage, req);
+
+    req.log.info({ name }, "Successfully sent message");
+
+    res.json({
+      success: true,
+      name
+    });
+  } catch (err) {
+    let target: "error" | "warn" = "error";
+    if (err instanceof BadRequestError || err instanceof ValidationFailedError) {
+      target = "warn";
+    }
+    req.log[target]({ error: err.message }, "Failed to send message");
+    next(err);
+  }
+};
+
+interface SendTopicBody {
+  condition: string;
+}
+
+export const sendMessageToCondition: PushkinRequestHandler<SendMessageBody & SendTopicBody, void> = async function(
+  req,
+  res,
+  next
+) {
+  try {
+    if (!req.body.condition) {
+      throw new BadRequestError("Must specify a 'condition' to send a message");
+    }
+
+    let namespacedCondition = namespaceCondition(req.body.condition);
+
+    req.log.info(
+      {
+        action: "send-message",
+        target_type: "condition",
+        condition: req.body.condition,
+        namespaced: namespacedCondition
+      },
+      "Received request to send message"
+    );
+
+    let mergedMessage: FCMConditionMessage = Object.assign({}, req.body.message, { condition: namespacedCondition });
+
+    validate(mergedMessage, "FCMConditionMessage");
 
     let name = await sendMessage(mergedMessage, req);
 

@@ -77,6 +77,32 @@
         "topic"
       ]
     },
+    "FCMConditionMessage": {
+      "type": "object",
+      "properties": {
+        "condition": {
+          "type": "string"
+        },
+        "data": {},
+        "notification": {
+          "$ref": "#/definitions/FCMNotification"
+        },
+        "android": {
+          "$ref": "#/definitions/FCMAndroidConfig"
+        },
+        "webpush": {
+          "$ref": "#/definitions/FCMWebpushConfig"
+        },
+        "apns": {
+          "$ref": "#/definitions/FCMApnsConfig"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "condition",
+        "notification"
+      ]
+    },
     "EnvironmentVariables": {
       "additionalProperties": true,
       "type": "object",

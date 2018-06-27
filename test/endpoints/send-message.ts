@@ -2,7 +2,7 @@ import * as nock from "nock";
 import fetch from "node-fetch";
 import { expect } from "chai";
 import { createServer } from "../../src/index";
-import { namespaceTopic } from "../../src/util/namespace";
+import { namespaceTopic, namespaceCondition } from "../../src/util/namespace";
 
 import Environment from "../../src/util/env";
 
@@ -122,6 +122,40 @@ describe("Send message", () => {
     expect(res.status).to.eq(200);
     let json = await res.json();
 
+    expect(json.success).to.eq(true);
+    expect(json.name).to.eq("/test_message");
+
+    nocked.done();
+  });
+
+  it("Should successfully send condition message", async () => {
+    let nocked = sendMessageNock({
+      condition: namespaceCondition("'test' in topics && 'test2' in topics"),
+      notification: {
+        title: "Test title",
+        body: "test body"
+      }
+    });
+
+    let res = await fetch(`http://localhost:3000/send`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: Environment.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        condition: "'test' in topics && 'test2' in topics",
+        message: {
+          notification: {
+            title: "Test title",
+            body: "test body"
+          }
+        }
+      })
+    });
+
+    let json = await res.json();
+    expect(res.status).to.eq(200);
     expect(json.success).to.eq(true);
     expect(json.name).to.eq("/test_message");
 

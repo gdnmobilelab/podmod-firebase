@@ -35,6 +35,7 @@ let interfaces = [
   "FCMMessage",
   "FCMTokenMessage",
   "FCMTopicMessage",
+  "FCMConditionMessage",
   "EnvironmentVariables",
   "iOSSubscription",
   "WebSubscription"

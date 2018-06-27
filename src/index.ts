@@ -3,7 +3,7 @@ import * as restifyCORS from "restify-cors-middleware";
 import { subscribeOrUnsubscribe } from "./endpoints/subscribe";
 import { getFirebaseId } from "./endpoints/get-firebase-id";
 import { getSubscribed } from "./endpoints/get-subscribed";
-import { sendMessageToRegistration, sendMessageToTopic } from "./endpoints/send-message";
+import { sendMessageToRegistration, sendMessageToTopic, sendMessageToCondition } from "./endpoints/send-message";
 import { getTopicDetails } from "./endpoints/topic-details";
 import { getVAPIDKey } from "./endpoints/vapid-key";
 import { healthcheck } from "./endpoints/health-check";
@@ -96,6 +96,8 @@ export async function createServer(): Promise<() => void> {
   server.del("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
 
   server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
+  server.post("/send", checkForKey(ApiKeyType.Admin), sendMessageToCondition);
+
   server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
   server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
   server.get("/vapid-key", checkForKey(ApiKeyType.User), getVAPIDKey);
@@ -125,7 +127,7 @@ export async function createServer(): Promise<() => void> {
     await Promise.all([webListenPromise, dbConnectPromise]);
     log.warn({ action: "server-start", port, env: Environment.NODE_ENV, version }, "Server started.");
   } catch (err) {
-    log.error({ error: err.message, stack:err.stack }, "Server failed to start");
+    log.error({ error: err.message, stack: err.stack }, "Server failed to start");
     throw err;
   }
 
