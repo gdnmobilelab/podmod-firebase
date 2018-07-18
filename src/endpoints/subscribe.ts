@@ -96,7 +96,6 @@ export const subscribeOrUnsubscribe: PushkinRequestHandler<
       subscribed: action === "subscribe"
     });
   } catch (err) {
-    console.log(err);
     req.log.warn({ error: JSONifyError(err) }, "Failure when trying to set subscription action");
     next(err);
   }

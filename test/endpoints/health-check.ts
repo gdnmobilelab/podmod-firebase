@@ -1,22 +1,22 @@
-import { createServer } from "../../src/index";
+import { createServer, Server } from "../../src/index";
 import fetch from "node-fetch";
 import { expect } from "chai";
 import { Client } from "pg";
 import * as sinon from "sinon";
 
 describe("Healthcheck", function() {
-  let stop: () => void;
+  let server: Server;
   let stub: sinon.SinonStub | undefined;
 
   before(async () => {
-    stop = await createServer();
+    server = await createServer();
   });
 
   after(async () => {
     if (stub) {
       stub.restore();
     }
-    await stop();
+    await server.stop();
   });
 
   it("should return a 200 OK response", async function() {

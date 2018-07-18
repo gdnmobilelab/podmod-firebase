@@ -19,7 +19,7 @@ let jwt: sinon.SinonStub;
 
 before(async function() {
   checkEnvironmentVariables();
-
+  this.timeout(60000);
   // By default nock lets any network traffic to domains not specifically mocked
   // pass through. Just to make sure nothing ever escapes our test environment,
   // we disable that. Then specifically allow connections to our local server.

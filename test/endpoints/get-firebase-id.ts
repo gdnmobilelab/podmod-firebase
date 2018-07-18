@@ -1,19 +1,19 @@
 import * as nock from "nock";
 import fetch from "node-fetch";
 import { expect } from "chai";
-import { createServer } from "../../src/index";
+import { createServer, Server } from "../../src/index";
 import Environment from "../../src/util/env";
 
 describe("Get Firebase ID", () => {
-  let stop: () => void;
+  let server: Server;
 
   before(async () => {
-    stop = await createServer();
+    server = await createServer();
   });
 
   after(async () => {
     nock.cleanAll();
-    await stop();
+    await server.stop();
   });
 
   it("Should get ID for a web subscription", async () => {

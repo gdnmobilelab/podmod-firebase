@@ -102,7 +102,7 @@ describe("Toggle subscription state", () => {
     nocked.done();
   });
 
-  it("Should unsubscribe a user", async () => {
+  it.only("Should unsubscribe a user", async () => {
     const topic = "TEST_TOPIC";
     const userId = "TEST_USER_ID";
 
