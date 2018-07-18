@@ -1,21 +1,14 @@
 import * as restify from "restify";
 import * as restifyCORS from "restify-cors-middleware";
-import { subscribeOrUnsubscribe } from "./endpoints/subscribe";
-import { getFirebaseId } from "./endpoints/get-firebase-id";
-import { getSubscribed } from "./endpoints/get-subscribed";
-import { sendMessageToRegistration, sendMessageToTopic, sendMessageToCondition } from "./endpoints/send-message";
-import { getTopicDetails } from "./endpoints/topic-details";
-import { getVAPIDKey } from "./endpoints/vapid-key";
-import { healthcheck } from "./endpoints/health-check";
 import { applyCachingHeaders } from "./util/http-cache-headers";
 // import { batchOperation } from "./endpoints/batch";
 import { createLogger } from "./log/log";
 import { createClient as createDatabaseClient, addClientToRequest } from "./util/db";
-import { checkForKey, ApiKeyType } from "./security/key-check";
 import { JWT } from "google-auth-library";
 import Environment, { check as checkEnvironmentVariables } from "./util/env";
 import { promisify } from "util";
 import * as fs from "fs";
+import { setRoutes } from "./routes";
 
 let { version } = JSON.parse(fs.readFileSync(__dirname + "/../package.json", "UTF-8"));
 
@@ -90,19 +83,7 @@ export async function createServer(): Promise<() => void> {
     applyCachingHeaders
   );
 
-  server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);
-  server.get("/registrations/:registration_id/topics", checkForKey(ApiKeyType.User), getSubscribed);
-  server.post("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
-  server.del("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
-
-  server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
-  server.post("/send", checkForKey(ApiKeyType.Admin), sendMessageToCondition);
-
-  server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
-  server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
-  server.get("/vapid-key", checkForKey(ApiKeyType.User), getVAPIDKey);
-
-  server.get("/healthcheck", healthcheck);
+  setRoutes(server);
 
   // server.post("/topics/:topic_name/batch/subscribe", checkForKey(ApiKeyType.Admin), batchOperation("subscribe"));
   // server.post("/topics/:topic_name/batch/unsubscribe", checkForKey(ApiKeyType.Admin), batchOperation("unsubscribe"));
