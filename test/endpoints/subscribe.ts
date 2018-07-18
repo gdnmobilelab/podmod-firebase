@@ -1,7 +1,7 @@
 import * as nock from "nock";
 import fetch from "node-fetch";
 import { expect } from "chai";
-import { createServer } from "../../src/index";
+import { createServer, Server } from "../../src/index";
 import { sendMessageNock } from "./send-message";
 import { namespaceTopic } from "../../src/util/namespace";
 
@@ -28,15 +28,15 @@ export function unsubscribeUserNock(userId: string, topic: string) {
 }
 
 describe("Toggle subscription state", () => {
-  let stop: () => void;
+  let server: Server;
 
   before(async () => {
-    stop = await createServer();
+    server = await createServer();
   });
 
   after(async () => {
     nock.cleanAll();
-    await stop();
+    await server.stop();
   });
 
   it("Should subscribe a user", async () => {
@@ -56,9 +56,14 @@ describe("Toggle subscription state", () => {
 
     // expect(res.status).to.eq(200);
     let json = await res.json();
-    console.log(json);
     expect(res.status).to.eq(200);
     expect(json.subscribed).to.eq(true);
+
+    let result = await server.databaseClient.query(
+      "SELECT * from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
+      [userId, topic]
+    );
+    expect(result.rowCount).to.eq(1);
 
     nocked.done();
   });
@@ -103,6 +108,11 @@ describe("Toggle subscription state", () => {
 
     let nocked = unsubscribeUserNock(userId, topic);
 
+    await server.databaseClient.query("INSERT INTO currently_subscribed (firebase_id,topic_id) VALUES ($1, $2)", [
+      userId,
+      topic
+    ]);
+
     let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers/${userId}`, {
       method: "DELETE",
       headers: {
@@ -116,6 +126,12 @@ describe("Toggle subscription state", () => {
     let json = await res.json();
 
     expect(json.subscribed).to.eq(false);
+
+    let result = await server.databaseClient.query(
+      "SELECT * from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
+      [userId, topic]
+    );
+    expect(result.rowCount).to.eq(0);
 
     nocked.done();
   });
