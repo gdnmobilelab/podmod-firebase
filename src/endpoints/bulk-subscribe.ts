@@ -115,7 +115,6 @@ export const bulkSubscribeOrUnsubscribe: PushkinRequestHandler<
 
     res.json({ errors });
   } catch (err) {
-    console.log(err);
     req.log.warn({ err: err.message }, "Failure when trying to send batch operation");
     next(err);
   }
