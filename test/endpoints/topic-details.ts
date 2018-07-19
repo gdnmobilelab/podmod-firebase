@@ -100,8 +100,32 @@ describe("Topic Details", () => {
     expect(json[0]).to.eq("TEST_USER");
   });
 
-  xit("Should page this results list correctly", () => {
-    // This will be filled in once we have batch insert functionality added. Will
-    // be a nightmare to test otherwise.
+  it.only("Should page this results list correctly", async () => {
+    let values: string[] = [];
+    for (let x = 0; x < 1001; x++) {
+      values.push(`('TEST_TOPIC','TEST_USER_${x}')`);
+    }
+
+    await server.databaseClient.query(
+      "INSERT INTO currently_subscribed (topic_id, firebase_id) VALUES " + values.join(",")
+    );
+
+    let res = await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers", {
+      headers: {
+        authorization: Environment.ADMIN_API_KEY
+      }
+    });
+
+    let json = await res.json();
+    expect(json.length).to.eq(1000);
+
+    res = await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers?page=2", {
+      headers: {
+        authorization: Environment.ADMIN_API_KEY
+      }
+    });
+
+    json = await res.json();
+    expect(json.length).to.eq(1);
   });
 });

@@ -72,6 +72,7 @@ export async function createServer(): Promise<Server> {
   // use() on the other hand only runs on requests that have matching routes.
 
   server.use(
+    restify.plugins.queryParser(),
     restify.plugins.bodyParser({
       // by default the body parser adds values to req.params. I don't know why, it makes a lot
       // more sense to separate out req.params and req.body.
