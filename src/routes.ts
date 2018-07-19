@@ -7,12 +7,16 @@ import { getTopicDetails } from "./endpoints/topic-details";
 import { getVAPIDKey } from "./endpoints/vapid-key";
 import { healthcheck } from "./endpoints/health-check";
 import { subscribeOrUnsubscribe } from "./endpoints/subscribe";
+import { bulkSubscribeOrUnsubscribe } from "./endpoints/bulk-subscribe";
 
 export function setRoutes(server: restify.Server) {
   server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);
   server.get("/registrations/:registration_id/topics", checkForKey(ApiKeyType.User), getSubscribed);
   server.post("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
   server.del("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
+
+  server.post("/topics/:topic_name/subscribers", checkForKey(ApiKeyType.Admin), bulkSubscribeOrUnsubscribe);
+  server.del("/topics/:topic_name/subscribers", checkForKey(ApiKeyType.Admin), bulkSubscribeOrUnsubscribe);
 
   server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
   server.post("/send", checkForKey(ApiKeyType.Admin), sendMessageToCondition);

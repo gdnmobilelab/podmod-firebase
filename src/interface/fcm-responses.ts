@@ -50,3 +50,10 @@ export interface FCMSendMessageResponse {
   name?: string;
   error?: FCMError;
 }
+
+export interface FCMBatchOperationResult {
+  error?: "NOT_FOUND" | "INVALID_ARGUMENT" | "INTERNAL" | "TOO_MANY_TOPICS";
+}
+export interface FCMBatchOperationResponse {
+  results: FCMBatchOperationResult[];
+}
