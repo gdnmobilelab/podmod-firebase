@@ -76,29 +76,4 @@ describe("Topic Details", () => {
 
     unsub.done();
   });
-
-  xit("Should not reflect an unsubscribe without a corresponding subscribe", async () => {
-    // future improvement maybe?
-    let unsub = unsubscribeUserNock("TEST_USER", "TEST_TOPIC");
-
-    await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers/TEST_USER", {
-      method: "DELETE",
-      headers: {
-        authorization: Environment.USER_API_KEY
-      }
-    });
-
-    let res = await fetch(`http://localhost:3000/topics/TEST_TOPIC`, {
-      headers: {
-        authorization: Environment.ADMIN_API_KEY
-      }
-    });
-
-    let json = await res.json();
-    expect(json.subscribers.subscribes).to.eq(0);
-    expect(json.subscribers.unsubscribes).to.eq(0);
-    expect(json.subscribers.currentlySubscribed).to.eq(0);
-
-    unsub.done();
-  });
 });
