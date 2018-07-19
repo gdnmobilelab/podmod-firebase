@@ -17,7 +17,7 @@ describe("Topic Details", () => {
     await server.stop();
   });
 
-  it("Should show subscribers and unsubscribers", async () => {
+  it("Should show subscriber and unsubscriber totals", async () => {
     let res = await fetch(`http://localhost:3000/topics/TEST_TOPIC`, {
       headers: {
         authorization: Environment.ADMIN_API_KEY
@@ -30,7 +30,7 @@ describe("Topic Details", () => {
     expect(json.subscribers.currentlySubscribed).to.eq(0);
   });
 
-  it("Should reflect subscribes and unsubscribes", async () => {
+  it("Should reflect subscribes and unsubscribes in totals", async () => {
     let sub = subscribeUserNock("TEST_USER", "TEST_TOPIC");
     let unsub = unsubscribeUserNock("TEST_USER", "TEST_TOPIC");
 
@@ -75,5 +75,28 @@ describe("Topic Details", () => {
     expect(json.subscribers.currentlySubscribed).to.eq(0, "Current subscribers should equal 0");
 
     unsub.done();
+  });
+
+  it("Should return a list of subscribed tokens", async () => {
+    let sub = subscribeUserNock("TEST_USER", "TEST_TOPIC");
+    await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers/TEST_USER", {
+      method: "POST",
+      headers: {
+        authorization: Environment.USER_API_KEY,
+        "content-type": "application/json"
+      }
+    });
+    sub.done();
+
+    let res = await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers", {
+      headers: {
+        authorization: Environment.ADMIN_API_KEY
+      }
+    });
+
+    let json = await res.json();
+    expect(res.status).to.eq(200);
+    expect(json.length).to.eq(1);
+    expect(json[0]).to.eq("TEST_USER");
   });
 });

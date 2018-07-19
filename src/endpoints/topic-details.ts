@@ -34,3 +34,35 @@ export const getTopicDetails: PushkinRequestHandler<void, TopicDetailsParams> = 
     next(err);
   }
 };
+
+interface TopicSubscriberParams {
+  topic_name: string;
+  page?: string;
+}
+
+export const getTopicSubscribers: PushkinRequestHandler<void, TopicSubscriberParams> = async function(req, res, next) {
+  try {
+    let pageNumber = 0;
+    if ("page" in req.params) {
+      let parsed = parseInt(req.params.page, 10);
+      if (isNaN(parsed)) {
+        throw new Error("Could not parse page number provided");
+      }
+      pageNumber = parsed;
+    }
+
+    let { rows } = await req.db.query(
+      `
+      SELECT firebase_id from currently_subscribed WHERE topic_id = $1
+      OFFSET $2 LIMIT $3
+    `,
+      [req.params.topic_name, pageNumber * 1000, 1000]
+    );
+
+    let ids = rows.map(r => r.firebase_id);
+
+    res.json(ids);
+  } catch (err) {
+    next(err);
+  }
+};
