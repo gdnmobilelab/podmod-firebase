@@ -67,7 +67,7 @@ export const subscribeOrUnsubscribe: PushkinRequestHandler<
     await sendRequest(req.params.registration_id, req.params.topic_name, req.method, req.log);
     req.log.info({ success: true }, "Firebase request was successful");
 
-    let query = "INSERT INTO currently_subscribed (firebase_id, topic_id) VALUES ($1, $2)";
+    let query = "INSERT INTO currently_subscribed (firebase_id, topic_id) VALUES ($1, $2) ON CONFLICT DO NOTHING";
 
     if (action === "unsubscribe") {
       query = "DELETE FROM currently_subscribed WHERE firebase_id = $1 AND topic_id = $2";

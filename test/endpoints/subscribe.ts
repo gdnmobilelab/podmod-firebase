@@ -65,6 +65,63 @@ describe("Toggle subscription state", () => {
     );
     expect(result.rowCount).to.eq(1);
 
+    // Created by database triggers
+
+    let logResult = await server.databaseClient.query("SELECT * FROM subscription_log WHERE firebase_id = $1", [
+      userId
+    ]);
+
+    expect(logResult.rowCount).to.eq(1);
+
+    nocked.done();
+  });
+
+  it("Should be able to subscribe twice with no ill-effect", async () => {
+    const topic = "TEST_TOPIC";
+    const userId = "TEST_USER_ID";
+
+    let nocked = subscribeUserNock(userId, topic);
+
+    let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers/${userId}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.USER_API_KEY
+      },
+      body: "{}"
+    });
+
+    expect(res.status).to.eq(200);
+
+    let result = await server.databaseClient.query(
+      "SELECT subscribe_time from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
+      [userId, topic]
+    );
+    let firstTime = result.rows[0].subscribe_time;
+
+    nocked.done();
+
+    nocked = subscribeUserNock(userId, topic);
+
+    let res2 = await fetch(`http://localhost:3000/topics/${topic}/subscribers/${userId}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.USER_API_KEY
+      },
+      body: "{}"
+    });
+
+    expect(res2.status).to.eq(200);
+
+    let result2 = await server.databaseClient.query(
+      "SELECT subscribe_time from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
+      [userId, topic]
+    );
+    expect(result2.rowCount).to.eq(1);
+    let secondTime = result.rows[0].subscribe_time;
+    expect(firstTime).to.eq(secondTime);
+
     nocked.done();
   });
 
@@ -102,7 +159,7 @@ describe("Toggle subscription state", () => {
     nocked.done();
   });
 
-  it.only("Should unsubscribe a user", async () => {
+  it("Should unsubscribe a user", async () => {
     const topic = "TEST_TOPIC";
     const userId = "TEST_USER_ID";
 
@@ -132,6 +189,14 @@ describe("Toggle subscription state", () => {
       [userId, topic]
     );
     expect(result.rowCount).to.eq(0);
+
+    // Created by database triggers
+
+    let logResult = await server.databaseClient.query("SELECT * FROM subscription_log WHERE firebase_id = $1", [
+      userId
+    ]);
+
+    expect(logResult.rowCount).to.eq(2);
 
     nocked.done();
   });
