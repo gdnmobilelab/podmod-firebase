@@ -99,4 +99,9 @@ describe("Topic Details", () => {
     expect(json.length).to.eq(1);
     expect(json[0]).to.eq("TEST_USER");
   });
+
+  xit("Should page this results list correctly", () => {
+    // This will be filled in once we have batch insert functionality added. Will
+    // be a nightmare to test otherwise.
+  });
 });
