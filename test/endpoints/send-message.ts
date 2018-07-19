@@ -1,7 +1,7 @@
 import * as nock from "nock";
 import fetch from "node-fetch";
 import { expect } from "chai";
-import { createServer } from "../../src/index";
+import { createServer, Server } from "../../src/index";
 import { namespaceTopic, namespaceCondition } from "../../src/util/namespace";
 
 import Environment from "../../src/util/env";
@@ -31,15 +31,15 @@ export function sendMessageNock(target) {
 }
 
 describe("Send message", () => {
-  let stop: () => void;
+  let server: Server;
 
   before(async () => {
-    stop = await createServer();
+    server = await createServer();
   });
 
   after(async () => {
     nock.cleanAll();
-    await stop();
+    await server.stop();
   });
 
   it("Should error when bad request body sent", async () => {

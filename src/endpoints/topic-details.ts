@@ -8,38 +8,26 @@ export const getTopicDetails: PushkinRequestHandler<void, TopicDetailsParams> = 
   try {
     let { rows } = await req.db.query(
       `
-
-        SELECT COUNT (DISTINCT g.data->>'id') AS number, g.data->>'action' AS action
-        FROM log_entries_grouped AS g
-        WHERE g.data->>'id' IS NOT NULL
-        AND g.data->>'action' IN ('subscribe', 'unsubscribe')
-        AND g.data->>'topic' = $1
-        GROUP BY g.data->>'action'
+      SELECT 'current' as column, COUNT(*) as total from currently_subscribed WHERE topic_id = $1
+      UNION
+      SELECT action, COUNT (DISTINCT firebase_id)
+      FROM subscription_log
+      WHERE topic_id = $1
+      GROUP BY action
 
     `,
       [req.params.topic_name]
     );
 
-    let subscribers = 0;
-    let unsubscribers = 0;
-
-    let row: {
-      number: number;
-      action: string;
-    };
-    if ((row = rows.find(r => r.action === "subscribe"))) {
-      subscribers = row.number;
-    }
-
-    if ((row = rows.find(r => r.action === "unsubscribe"))) {
-      unsubscribers = row.number;
-    }
+    let current = rows.find(r => r.column === "current");
+    let subscribed = rows.find(r => r.column === "subscribe");
+    let unsubscribe = rows.find(r => r.column === "unsubscribe");
 
     res.json({
       subscribers: {
-        subscribes: subscribers,
-        unsubscribes: unsubscribers,
-        currentlySubscribed: subscribers - unsubscribers
+        subscribes: subscribed ? subscribed.total : 0,
+        unsubscribes: unsubscribe ? unsubscribe.total : 0,
+        currentlySubscribed: current.total
       }
     });
   } catch (err) {

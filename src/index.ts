@@ -1,28 +1,27 @@
 import * as restify from "restify";
 import * as restifyCORS from "restify-cors-middleware";
-import { subscribeOrUnsubscribe } from "./endpoints/subscribe";
-import { getFirebaseId } from "./endpoints/get-firebase-id";
-import { getSubscribed } from "./endpoints/get-subscribed";
-import { sendMessageToRegistration, sendMessageToTopic, sendMessageToCondition } from "./endpoints/send-message";
-import { getTopicDetails } from "./endpoints/topic-details";
-import { getVAPIDKey } from "./endpoints/vapid-key";
-import { healthcheck } from "./endpoints/health-check";
 import { applyCachingHeaders } from "./util/http-cache-headers";
 // import { batchOperation } from "./endpoints/batch";
 import { createLogger } from "./log/log";
 import { createClient as createDatabaseClient, addClientToRequest } from "./util/db";
-import { checkForKey, ApiKeyType } from "./security/key-check";
 import { JWT } from "google-auth-library";
 import Environment, { check as checkEnvironmentVariables } from "./util/env";
 import { promisify } from "util";
 import * as fs from "fs";
+import { setRoutes } from "./routes";
+import * as pg from "pg";
 
 let { version } = JSON.parse(fs.readFileSync(__dirname + "/../package.json", "UTF-8"));
+
+export interface Server {
+  stop: () => void;
+  databaseClient: pg.Client;
+}
 
 // When running tests we need to spin up and spin down the server on demand, so
 // we wrap the actual creation in a function.
 
-export async function createServer(): Promise<() => void> {
+export async function createServer(): Promise<Server> {
   const databaseClient = createDatabaseClient();
 
   // our custom bunyan instance
@@ -90,19 +89,7 @@ export async function createServer(): Promise<() => void> {
     applyCachingHeaders
   );
 
-  server.post("/registrations", checkForKey(ApiKeyType.User), getFirebaseId);
-  server.get("/registrations/:registration_id/topics", checkForKey(ApiKeyType.User), getSubscribed);
-  server.post("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
-  server.del("/topics/:topic_name/subscribers/:registration_id", checkForKey(ApiKeyType.User), subscribeOrUnsubscribe);
-
-  server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
-  server.post("/send", checkForKey(ApiKeyType.Admin), sendMessageToCondition);
-
-  server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
-  server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
-  server.get("/vapid-key", checkForKey(ApiKeyType.User), getVAPIDKey);
-
-  server.get("/healthcheck", healthcheck);
+  setRoutes(server);
 
   // server.post("/topics/:topic_name/batch/subscribe", checkForKey(ApiKeyType.Admin), batchOperation("subscribe"));
   // server.post("/topics/:topic_name/batch/unsubscribe", checkForKey(ApiKeyType.Admin), batchOperation("unsubscribe"));
@@ -134,7 +121,7 @@ export async function createServer(): Promise<() => void> {
   // This could probably be more intuitive, but createServer() returns a function which, when run,
   // closes the server. We're only using this in tests so this is probably fine for now.
 
-  return async function() {
+  let stop = async function() {
     // We finish the DB stream before the other promises because we need to make
     // sure it's finished before we close the DB connection.
     await promisify(dbStream.end).apply(dbStream);
@@ -142,6 +129,8 @@ export async function createServer(): Promise<() => void> {
 
     // log.warn({ action: "server-stop" }, "Stopped server");
   };
+
+  return { stop, databaseClient };
 }
 
 if (require.main === module) {

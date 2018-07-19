@@ -2,19 +2,28 @@ version: '3'
 services:
   pushkin:
     image: "mhart/alpine-node:8"
+    expose:
+      - "3000"
     ports:
       - "3000:3000"
     volumes:
       - .:/code
-    # command: "npm run dev"
     working_dir: "/code"
     links:
-      - postgres
+     - postgres
     environment:
       DATABASE_URL: postgres://postgres@postgres/postgres
+    networks:
+      - internal
   postgres:
-    image: "onjin/alpine-postgres"
+    image: "postgres:9.6-alpine"
     volumes:
       - ./.dev-pgdata:/db-data
     environment:
       PGDATA: /db-data
+    ports:
+      - "5432:5432"
+    networks:
+      - internal
+networks:
+  internal:

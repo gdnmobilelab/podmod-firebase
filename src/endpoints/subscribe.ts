@@ -65,8 +65,15 @@ export const subscribeOrUnsubscribe: PushkinRequestHandler<
     req.log.info({ action, topic: req.params.topic_name, id: req.params.registration_id }, "Received request.");
 
     await sendRequest(req.params.registration_id, req.params.topic_name, req.method, req.log);
-
     req.log.info({ success: true }, "Firebase request was successful");
+
+    let query = "INSERT INTO currently_subscribed (firebase_id, topic_id) VALUES ($1, $2) ON CONFLICT DO NOTHING";
+
+    if (action === "unsubscribe") {
+      query = "DELETE FROM currently_subscribed WHERE firebase_id = $1 AND topic_id = $2";
+    }
+
+    await req.db.query(query, [req.params.registration_id, req.params.topic_name]);
 
     if (req.body && req.body.confirmation) {
       validate(req.body.confirmation, "FCMMessage");

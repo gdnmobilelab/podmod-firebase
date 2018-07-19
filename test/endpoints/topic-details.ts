@@ -1,20 +1,20 @@
 import * as nock from "nock";
 import fetch from "node-fetch";
 import { expect } from "chai";
-import { createServer } from "../../src/index";
+import { createServer, Server } from "../../src/index";
 import Environment from "../../src/util/env";
 import { subscribeUserNock, unsubscribeUserNock } from "./subscribe";
 
 describe("Topic Details", () => {
-  let stop: () => void;
+  let server: Server;
 
   before(async () => {
-    stop = await createServer();
+    server = await createServer();
   });
 
   after(async () => {
     nock.cleanAll();
-    await stop();
+    await server.stop();
   });
 
   it("Should show subscribers and unsubscribers", async () => {
@@ -73,31 +73,6 @@ describe("Topic Details", () => {
     expect(json.subscribers.subscribes).to.eq(1, "Subscribes should equal 1");
     expect(json.subscribers.unsubscribes).to.eq(1, "Unsubscribes should equal 1");
     expect(json.subscribers.currentlySubscribed).to.eq(0, "Current subscribers should equal 0");
-
-    unsub.done();
-  });
-
-  xit("Should not reflect an unsubscribe without a corresponding subscribe", async () => {
-    // future improvement maybe?
-    let unsub = unsubscribeUserNock("TEST_USER", "TEST_TOPIC");
-
-    await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers/TEST_USER", {
-      method: "DELETE",
-      headers: {
-        authorization: Environment.USER_API_KEY
-      }
-    });
-
-    let res = await fetch(`http://localhost:3000/topics/TEST_TOPIC`, {
-      headers: {
-        authorization: Environment.ADMIN_API_KEY
-      }
-    });
-
-    let json = await res.json();
-    expect(json.subscribers.subscribes).to.eq(0);
-    expect(json.subscribers.unsubscribes).to.eq(0);
-    expect(json.subscribers.currentlySubscribed).to.eq(0);
 
     unsub.done();
   });

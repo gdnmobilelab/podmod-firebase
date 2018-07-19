@@ -1,7 +1,7 @@
 import * as nock from "nock";
 import fetch from "node-fetch";
 import { expect } from "chai";
-import { createServer } from "../../src/index";
+import { createServer, Server } from "../../src/index";
 import { sendMessageNock } from "./send-message";
 import { namespaceTopic } from "../../src/util/namespace";
 
@@ -28,15 +28,15 @@ export function unsubscribeUserNock(userId: string, topic: string) {
 }
 
 describe("Toggle subscription state", () => {
-  let stop: () => void;
+  let server: Server;
 
   before(async () => {
-    stop = await createServer();
+    server = await createServer();
   });
 
   after(async () => {
     nock.cleanAll();
-    await stop();
+    await server.stop();
   });
 
   it("Should subscribe a user", async () => {
@@ -56,9 +56,71 @@ describe("Toggle subscription state", () => {
 
     // expect(res.status).to.eq(200);
     let json = await res.json();
-    console.log(json);
     expect(res.status).to.eq(200);
     expect(json.subscribed).to.eq(true);
+
+    let result = await server.databaseClient.query(
+      "SELECT * from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
+      [userId, topic]
+    );
+    expect(result.rowCount).to.eq(1);
+
+    // Created by database triggers
+
+    let logResult = await server.databaseClient.query("SELECT * FROM subscription_log WHERE firebase_id = $1", [
+      userId
+    ]);
+
+    expect(logResult.rowCount).to.eq(1);
+
+    nocked.done();
+  });
+
+  it("Should be able to subscribe twice with no ill-effect", async () => {
+    const topic = "TEST_TOPIC";
+    const userId = "TEST_USER_ID";
+
+    let nocked = subscribeUserNock(userId, topic);
+
+    let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers/${userId}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.USER_API_KEY
+      },
+      body: "{}"
+    });
+
+    expect(res.status).to.eq(200);
+
+    let result = await server.databaseClient.query(
+      "SELECT subscribe_time from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
+      [userId, topic]
+    );
+    let firstTime = result.rows[0].subscribe_time;
+
+    nocked.done();
+
+    nocked = subscribeUserNock(userId, topic);
+
+    let res2 = await fetch(`http://localhost:3000/topics/${topic}/subscribers/${userId}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.USER_API_KEY
+      },
+      body: "{}"
+    });
+
+    expect(res2.status).to.eq(200);
+
+    let result2 = await server.databaseClient.query(
+      "SELECT subscribe_time from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
+      [userId, topic]
+    );
+    expect(result2.rowCount).to.eq(1);
+    let secondTime = result.rows[0].subscribe_time;
+    expect(firstTime).to.eq(secondTime);
 
     nocked.done();
   });
@@ -103,6 +165,11 @@ describe("Toggle subscription state", () => {
 
     let nocked = unsubscribeUserNock(userId, topic);
 
+    await server.databaseClient.query("INSERT INTO currently_subscribed (firebase_id,topic_id) VALUES ($1, $2)", [
+      userId,
+      topic
+    ]);
+
     let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers/${userId}`, {
       method: "DELETE",
       headers: {
@@ -116,6 +183,20 @@ describe("Toggle subscription state", () => {
     let json = await res.json();
 
     expect(json.subscribed).to.eq(false);
+
+    let result = await server.databaseClient.query(
+      "SELECT * from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
+      [userId, topic]
+    );
+    expect(result.rowCount).to.eq(0);
+
+    // Created by database triggers
+
+    let logResult = await server.databaseClient.query("SELECT * FROM subscription_log WHERE firebase_id = $1", [
+      userId
+    ]);
+
+    expect(logResult.rowCount).to.eq(2);
 
     nocked.done();
   });
