@@ -100,7 +100,7 @@ describe("Topic Details", () => {
     expect(json[0]).to.eq("TEST_USER");
   });
 
-  it.only("Should page this results list correctly", async () => {
+  it("Should page this results list correctly", async () => {
     let values: string[] = [];
     for (let x = 0; x < 1001; x++) {
       values.push(`('TEST_TOPIC','TEST_USER_${x}')`);
