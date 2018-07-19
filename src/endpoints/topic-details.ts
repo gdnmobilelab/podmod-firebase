@@ -14,6 +14,7 @@ export const getTopicDetails: PushkinRequestHandler<void, TopicDetailsParams> = 
       FROM subscription_log
       WHERE topic_id = $1
       GROUP BY action
+
     `,
       [req.params.topic_name]
     );
