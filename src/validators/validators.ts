@@ -397,6 +397,12 @@
         },
         "thread-id": {
           "type": "string"
+        },
+        "mutable-content": {
+          "type": "number",
+          "enum": [
+            1
+          ]
         }
       },
       "additionalProperties": false

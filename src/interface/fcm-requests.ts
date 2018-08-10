@@ -54,6 +54,7 @@ interface ApnsKeys {
   "content-available"?: 1;
   category?: string;
   "thread-id"?: string;
+  "mutable-content"?: 1;
 }
 
 interface ApnsPayload {
