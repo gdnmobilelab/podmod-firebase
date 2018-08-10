@@ -3,7 +3,7 @@ import * as bunyan from "bunyan";
 import Environment from "../util/env";
 import { FCMBatchOperationResponse } from "../interface/fcm-responses";
 import { PushkinRequestHandler } from "../util/request-handler";
-import { BadRequestError } from "../../node_modules/@types/restify-errors";
+import { BadRequestError } from "restify-errors";
 
 type BatchOperation = "batchAdd" | "batchRemove";
 
