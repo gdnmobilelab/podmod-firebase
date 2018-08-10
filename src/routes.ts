@@ -3,7 +3,7 @@ import { checkForKey, ApiKeyType } from "./security/key-check";
 import { getFirebaseId } from "./endpoints/get-firebase-id";
 import { getSubscribed } from "./endpoints/get-subscribed";
 import { sendMessageToRegistration, sendMessageToTopic, sendMessageToCondition } from "./endpoints/send-message";
-import { getTopicDetails } from "./endpoints/topic-details";
+import { getTopicDetails, getTopicSubscribers } from "./endpoints/topic-details";
 import { getVAPIDKey } from "./endpoints/vapid-key";
 import { healthcheck } from "./endpoints/health-check";
 import { subscribeOrUnsubscribe } from "./endpoints/subscribe";
@@ -23,6 +23,7 @@ export function setRoutes(server: restify.Server) {
 
   server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
   server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
+  server.get("/topics/:topic_name/subscribers", checkForKey(ApiKeyType.Admin), getTopicSubscribers);
   server.get("/vapid-key", checkForKey(ApiKeyType.User), getVAPIDKey);
 
   server.get("/healthcheck", healthcheck);
