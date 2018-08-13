@@ -324,24 +324,12 @@
     "FCMWebpushNotification": {
       "type": "object",
       "properties": {
-        "title": {
-          "type": "string"
-        },
-        "body": {
-          "type": "string"
-        },
-        "icon": {
-          "type": "string"
-        },
-        "badge": {
-          "type": "string"
-        },
-        "tag": {
-          "type": "string"
-        },
-        "image": {
-          "type": "string"
-        },
+        "title": {},
+        "body": {},
+        "icon": {},
+        "badge": {},
+        "tag": {},
+        "image": {},
         "data": {
           "type": "object",
           "additionalProperties": {}

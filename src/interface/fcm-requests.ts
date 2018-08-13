@@ -25,12 +25,12 @@ interface FCMAndroidConfig {
 }
 
 interface FCMWebpushNotification {
-  title?: string;
-  body?: string;
-  icon?: string;
-  badge?: string;
-  tag?: string;
-  image?: string;
+  title?: any;
+  body?: any;
+  icon?: any;
+  badge?: any;
+  tag?: any;
+  image?: any;
   data?: { [key: string]: any };
   events?: any;
 }
