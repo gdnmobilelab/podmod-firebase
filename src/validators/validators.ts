@@ -340,12 +340,12 @@
           "items": {
             "$ref": "#/definitions/FCMWebpushAction"
           }
+        },
+        "renotify": {
+          "type": "boolean"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "actions"
-      ]
+      "additionalProperties": false
     },
     "FCMWebpushAction": {
       "type": "object",

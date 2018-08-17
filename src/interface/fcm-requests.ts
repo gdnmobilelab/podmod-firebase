@@ -38,7 +38,8 @@ interface FCMWebpushNotification {
   image?: any;
   data?: { [key: string]: any };
   events?: any;
-  actions: FCMWebpushAction[];
+  actions?: FCMWebpushAction[];
+  renotify?: boolean;
 }
 
 interface FCMWebpushConfig {
