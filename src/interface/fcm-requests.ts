@@ -24,6 +24,11 @@ interface FCMAndroidConfig {
   notification?: FCMAndroidNotification;
 }
 
+interface FCMWebpushAction {
+  action: string;
+  title: string;
+}
+
 interface FCMWebpushNotification {
   title?: any;
   body?: any;
@@ -33,6 +38,7 @@ interface FCMWebpushNotification {
   image?: any;
   data?: { [key: string]: any };
   events?: any;
+  actions: FCMWebpushAction[];
 }
 
 interface FCMWebpushConfig {

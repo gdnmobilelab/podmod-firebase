@@ -334,9 +334,34 @@
           "type": "object",
           "additionalProperties": {}
         },
-        "events": {}
+        "events": {},
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FCMWebpushAction"
+          }
+        }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": [
+        "actions"
+      ]
+    },
+    "FCMWebpushAction": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "title"
+      ]
     },
     "FCMApnsConfig": {
       "type": "object",
