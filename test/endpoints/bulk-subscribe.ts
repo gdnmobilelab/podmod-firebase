@@ -1,0 +1,212 @@
+import * as nock from "nock";
+import fetch from "node-fetch";
+import { expect } from "chai";
+import { createServer, Server } from "../../src/index";
+import { sendMessageNock } from "./send-message";
+import { namespaceTopic } from "../../src/util/namespace";
+
+interface BulkOperationStub {
+  id: string;
+  error?: string;
+}
+
+export function bulkOperationNock(operation: "batchAdd" | "batchRemove", userIds: BulkOperationStub[], topic: string) {
+  return nock("https://iid.googleapis.com", {
+    reqheaders: {
+      "Content-Type": "application/json",
+      authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
+    }
+  })
+    .post(`/iid/v1:${operation}`, {
+      to: `/topics/${namespaceTopic(topic)}`,
+      registration_tokens: userIds.map(u => u.id)
+    })
+    .reply(200, {
+      results: userIds.map(u => {
+        return { error: u.error };
+      })
+    });
+}
+
+describe("Bulk subscription operations", () => {
+  let server: Server;
+
+  before(async () => {
+    server = await createServer();
+  });
+
+  after(async () => {
+    nock.cleanAll();
+    await server.stop();
+  });
+
+  it("Should subscribe users in bulk", async () => {
+    const topic = "TEST_TOPIC";
+
+    const users = [
+      {
+        id: "TEST_USER"
+      },
+      {
+        id: "TEST_USER2"
+      }
+    ];
+
+    let nocked = bulkOperationNock("batchAdd", users, "TEST_TOPIC");
+
+    let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        ids: users.map(u => u.id)
+      })
+    });
+
+    let json = await res.json();
+    expect(res.status).to.eq(200);
+    expect(json.errors.length).to.eq(0);
+
+    let result = await server.databaseClient.query(
+      "SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3",
+      ["TEST_USER", "TEST_USER2", topic]
+    );
+    expect(result.rowCount).to.eq(2);
+    expect(result.rows[0].firebase_id).to.eq("TEST_USER");
+    expect(result.rows[1].firebase_id).to.eq("TEST_USER2");
+
+    nocked.done();
+  });
+
+  it("Should unsubscribe users in bulk", async () => {
+    const topic = "TEST_TOPIC";
+
+    const users = [
+      {
+        id: "TEST_USER"
+      },
+      {
+        id: "TEST_USER2"
+      }
+    ];
+
+    // Add users first, so we can check the database operations work
+    await server.databaseClient.query(`
+      INSERT INTO currently_subscribed (firebase_id, topic_id)
+      VALUES ('TEST_USER', 'TEST_TOPIC'), ('TEST_USER2', 'TEST_TOPIC')
+      `);
+
+    let nocked = bulkOperationNock("batchRemove", users, "TEST_TOPIC");
+
+    let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers`, {
+      method: "DELETE",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        ids: users.map(u => u.id)
+      })
+    });
+
+    let json = await res.json();
+    expect(res.status).to.eq(200);
+    expect(json.errors.length).to.eq(0);
+    nocked.done();
+
+    let result = await server.databaseClient.query(
+      "SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3",
+      ["TEST_USER", "TEST_USER2", topic]
+    );
+    expect(result.rowCount).to.eq(0);
+  });
+
+  it("Should record successful subscribes and return failed ones", async () => {
+    const topic = "TEST_TOPIC";
+
+    const users = [
+      {
+        id: "TEST_USER",
+        error: "NOT_FOUND"
+      },
+      {
+        id: "TEST_USER2"
+      }
+    ];
+
+    let subnock = bulkOperationNock("batchAdd", users, "TEST_TOPIC");
+    let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        ids: users.map(u => u.id)
+      })
+    });
+
+    subnock.done();
+
+    let json = await res.json();
+    expect(json.errors.length).to.eq(1);
+    expect(json.errors[0].id).to.eq("TEST_USER");
+    expect(json.errors[0].error).to.eq("NOT_FOUND");
+
+    let result = await server.databaseClient.query(
+      "SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3",
+      ["TEST_USER", "TEST_USER2", topic]
+    );
+    expect(result.rowCount).to.eq(1);
+    expect(result.rows[0].firebase_id).to.eq("TEST_USER2");
+  });
+
+  it("Should record successful unsubscribes and return failed ones", async () => {
+    const topic = "TEST_TOPIC";
+
+    const users = [
+      {
+        id: "TEST_USER",
+        error: "NOT_FOUND"
+      },
+      {
+        id: "TEST_USER2"
+      }
+    ];
+
+    // Add users first, so we can check the database operations work
+    await server.databaseClient.query(`
+      INSERT INTO currently_subscribed (firebase_id, topic_id)
+      VALUES ('TEST_USER', 'TEST_TOPIC'), ('TEST_USER2', 'TEST_TOPIC')
+      `);
+
+    // Subscriber users first, so we can check the database operations work
+    let remnock = bulkOperationNock("batchRemove", users, "TEST_TOPIC");
+    let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers`, {
+      method: "DELETE",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        ids: users.map(u => u.id)
+      })
+    });
+
+    remnock.done();
+
+    let json = await res.json();
+    expect(json.errors.length).to.eq(1);
+    expect(json.errors[0].id).to.eq("TEST_USER");
+    expect(json.errors[0].error).to.eq("NOT_FOUND");
+
+    let result = await server.databaseClient.query(
+      "SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3",
+      ["TEST_USER", "TEST_USER2", topic]
+    );
+    expect(result.rowCount).to.eq(1);
+    expect(result.rows[0].firebase_id).to.eq("TEST_USER");
+  });
+});

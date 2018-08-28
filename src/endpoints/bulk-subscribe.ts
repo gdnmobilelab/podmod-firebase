@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import * as bunyan from "bunyan";
 import Environment from "../util/env";
+import { namespaceTopic } from "../util/namespace";
 import { FCMBatchOperationResponse } from "../interface/fcm-responses";
 import { PushkinRequestHandler } from "../util/request-handler";
 import { BadRequestError } from "restify-errors";
@@ -8,14 +9,19 @@ import { BadRequestError } from "restify-errors";
 type BatchOperation = "batchAdd" | "batchRemove";
 
 async function sendRequest(operation: BatchOperation, topicName: string, ids: string[], log: bunyan) {
-  log.info({ operation, topicName, numberOfIds: ids.length }, "Sending batch operation to Firebase...");
+  let namespacedTopic = namespaceTopic(topicName);
+  log.info(
+    { operation, namespacedTopic, topicName, numberOfIds: ids.length },
+    "Sending batch operation to Firebase..."
+  );
   let res = await fetch("https://iid.googleapis.com/iid/v1:" + operation, {
     method: "POST",
     headers: {
-      Authorization: "key=" + Environment.FIREBASE_AUTH_KEY
+      Authorization: "key=" + Environment.FIREBASE_AUTH_KEY,
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      to: "/topics/" + topicName,
+      to: "/topics/" + namespacedTopic,
       registration_tokens: ids
     })
   });
@@ -70,8 +76,49 @@ export const bulkSubscribeOrUnsubscribe: PushkinRequestHandler<
     let operation: BatchOperation = req.method === "POST" ? "batchAdd" : "batchRemove";
 
     let results = await sendRequest(operation, req.params.topic_name, req.body.ids, req.log);
+    let errors: { id: string; error: string }[] = [];
+    let successfulIDs: string[] = [];
 
-    res.json(results);
+    results.forEach((result, idx) => {
+      if (!result.error) {
+        successfulIDs.push(req.body.ids[idx]);
+        return;
+      }
+      errors.push({
+        error: result.error,
+        id: req.body.ids[idx]
+      });
+    });
+
+    if (operation === "batchAdd") {
+      // Postgres doesn't seem to have a good way to insert a lot of stuff at once, short of writing out
+      // VALUES() a lot, so... let's do that?
+
+      let values: string[] = [];
+      let args = [req.params.topic_name];
+
+      successfulIDs.forEach((id, idx) => {
+        values.push(`($1, $${idx + 2})`);
+        args.push(id);
+      });
+
+      await req.db.query(
+        "INSERT INTO currently_subscribed (topic_id, firebase_id) VALUES " +
+          values.join(",") +
+          " ON CONFLICT DO NOTHING",
+        args
+      );
+    } else {
+      // Similarly there's no good way to say IN(argument_array) without declaring each variable. So
+      // we have to do that, too.
+
+      let args = [req.params.topic_name].concat(successfulIDs);
+      let inArgs = successfulIDs.map((id, idx) => "$" + (idx + 2));
+
+      await req.db.query(`DELETE FROM currently_subscribed WHERE topic_id = $1 AND firebase_id IN (${inArgs})`, args);
+    }
+
+    res.json({ errors });
   } catch (err) {
     req.log.warn({ err: err.message }, "Failure when trying to send batch operation");
     next(err);
