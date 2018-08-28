@@ -18,7 +18,7 @@ export function bulkOperationNock(operation: "batchAdd" | "batchRemove", userIds
     }
   })
     .post(`/iid/v1:${operation}`, {
-      to: `/topics/${topic}`,
+      to: `/topics/${namespaceTopic(topic)}`,
       registration_tokens: userIds.map(u => u.id)
     })
     .reply(200, {
