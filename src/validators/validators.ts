@@ -324,31 +324,44 @@
     "FCMWebpushNotification": {
       "type": "object",
       "properties": {
-        "title": {
-          "type": "string"
-        },
-        "body": {
-          "type": "string"
-        },
-        "icon": {
-          "type": "string"
-        },
-        "badge": {
-          "type": "string"
-        },
-        "tag": {
-          "type": "string"
-        },
-        "image": {
-          "type": "string"
-        },
+        "title": {},
+        "body": {},
+        "icon": {},
+        "badge": {},
+        "tag": {},
+        "image": {},
         "data": {
           "type": "object",
           "additionalProperties": {}
         },
-        "events": {}
+        "events": {},
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FCMWebpushAction"
+          }
+        },
+        "renotify": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": false
+    },
+    "FCMWebpushAction": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "title"
+      ]
     },
     "FCMApnsConfig": {
       "type": "object",
@@ -397,6 +410,12 @@
         },
         "thread-id": {
           "type": "string"
+        },
+        "mutable-content": {
+          "type": "number",
+          "enum": [
+            1
+          ]
         }
       },
       "additionalProperties": false

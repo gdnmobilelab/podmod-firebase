@@ -24,15 +24,22 @@ interface FCMAndroidConfig {
   notification?: FCMAndroidNotification;
 }
 
+interface FCMWebpushAction {
+  action: string;
+  title: string;
+}
+
 interface FCMWebpushNotification {
-  title?: string;
-  body?: string;
-  icon?: string;
-  badge?: string;
-  tag?: string;
-  image?: string;
+  title?: any;
+  body?: any;
+  icon?: any;
+  badge?: any;
+  tag?: any;
+  image?: any;
   data?: { [key: string]: any };
   events?: any;
+  actions?: FCMWebpushAction[];
+  renotify?: boolean;
 }
 
 interface FCMWebpushConfig {
@@ -54,6 +61,7 @@ interface ApnsKeys {
   "content-available"?: 1;
   category?: string;
   "thread-id"?: string;
+  "mutable-content"?: 1;
 }
 
 interface ApnsPayload {
