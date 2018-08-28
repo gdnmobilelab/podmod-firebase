@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import * as bunyan from "bunyan";
 import Environment from "../util/env";
+import { namespaceTopic } from "../util/namespace";
 import { FCMBatchOperationResponse } from "../interface/fcm-responses";
 import { PushkinRequestHandler } from "../util/request-handler";
 import { BadRequestError } from "restify-errors";
@@ -8,7 +9,11 @@ import { BadRequestError } from "restify-errors";
 type BatchOperation = "batchAdd" | "batchRemove";
 
 async function sendRequest(operation: BatchOperation, topicName: string, ids: string[], log: bunyan) {
-  log.info({ operation, topicName, numberOfIds: ids.length }, "Sending batch operation to Firebase...");
+  let namespacedTopic = namespaceTopic(topicName);
+  log.info(
+    { operation, namespacedTopic, topicName, numberOfIds: ids.length },
+    "Sending batch operation to Firebase..."
+  );
   let res = await fetch("https://iid.googleapis.com/iid/v1:" + operation, {
     method: "POST",
     headers: {
@@ -16,7 +21,7 @@ async function sendRequest(operation: BatchOperation, topicName: string, ids: st
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      to: "/topics/" + topicName,
+      to: "/topics/" + namespacedTopic,
       registration_tokens: ids
     })
   });
