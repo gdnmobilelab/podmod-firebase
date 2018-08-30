@@ -8,17 +8,17 @@ In normal situation Pushkin isn't necessary, you just add the Firebase dependenc
 
 ## What it uses
 
-* Node (currently v8.0)
-* Postgres (needs a version that supports the JSONB data type)
-* TypeScript
-* Docker (both in production and locally)
+- Node (currently v8.0)
+- Postgres (needs a version that supports the JSONB data type)
+- TypeScript
+- Docker (both in production and locally)
 
 ## Where it runs
 
 Pushkin runs on staging and production:
 
-* `https://pushkin.stg.newsdev.nytimes.com/`
-* `https://pushkin.newsdev.nytimes.com/`
+- `https://pushkin.stg.newsdev.nytimes.com/`
+- `https://pushkin.newsdev.nytimes.com/`
 
 However, staging can only be used with the debug versions of the apps. Read [this page on the wiki](https://github.com/newsdev/pushkin/wiki/App-and-server-environments) for more details.
 
@@ -30,16 +30,16 @@ Refer to [the wiki](https://github.com/newsdev/pushkin/wiki) for further instruc
 
 Pushkin requires a number of environment variables to be set in order to function correctly. Some can be found in the Firebase project configuration page, but others require you to set up a [service account](https://console.cloud.google.com/projectselector/iam-admin/serviceaccounts) and download the JSON file with the required auth fields. (NOTE: this service account must also be given editor permissions, otherwise it won't be able to send messages)
 
-* `DATABASE_URL`: in the format of `postgres://user:password@host/database`.
-* `FCM_PROJECT`: the Firebase project ID. `project_id` in the service account JSON file.
-* `FIREBASE_AUTH_KEY`: the 'Server Key' listed in the Cloud Messaging configuration page of your Firebase project.
-* `FIREBASE_CLIENT_EMAIL`: the `client_email` field in the service account JSON.
-* `FIREBASE_PRIVATE_KEY`: the `private_key` field in the service account JSON. This and the client e-mail are used to create a JSON web token.
-* `USER_API_KEY`: the key required in the Authorization header of user-level requests
-* `ADMIN_API_KEY`: same as above, except for admin-level operations like sending messages
-* `TOPIC_PREFIX`: in case we're using multiple instances of Pushkin with one Firebase account (we only have one for production, for example) all Firebase topics will be prefixed with this string. Unless you're doing something particularly strange this should be invisible within your Pushkin instance.
-* `VAPID_PUBLIC_KEY`: used in web notifications. Right now it has to be hardcoded to FCM's key (see the [wiki](https://github.com/newsdev/pushkin/wiki/Getting-a-token) for details)
-* `NODE_ENV`: a very common environment variable in node projects, is either `production`, `staging` or `development`. Is also used alongside `TOPIC_PREFIX` when interfacing with Firebase topics, to ensure we don't leak staging messages into production.
+- `DATABASE_URL`: in the format of `postgres://user:password@host/database`.
+- `FCM_PROJECT`: the Firebase project ID. `project_id` in the service account JSON file.
+- `FIREBASE_AUTH_KEY`: the 'Server Key' listed in the Cloud Messaging configuration page of your Firebase project.
+- `FIREBASE_CLIENT_EMAIL`: the `client_email` field in the service account JSON.
+- `FIREBASE_PRIVATE_KEY`: the `private_key` field in the service account JSON. This and the client e-mail are used to create a JSON web token.
+- `USER_API_KEY`: the key required in the Authorization header of user-level requests
+- `ADMIN_API_KEY`: same as above, except for admin-level operations like sending messages
+- `TOPIC_PREFIX`: in case we're using multiple instances of Pushkin with one Firebase account (we only have one for production, for example) all Firebase topics will be prefixed with this string. Unless you're doing something particularly strange this should be invisible within your Pushkin instance.
+- `VAPID_PUBLIC_KEY`: used in web notifications. Right now it has to be hardcoded to FCM's key (see the [wiki](https://github.com/newsdev/pushkin/wiki/Getting-a-token) for details)
+- `NODE_ENV`: a very common environment variable in node projects, is either `production`, `staging` or `development`. Is also used alongside `TOPIC_PREFIX` when interfacing with Firebase topics, to ensure we don't leak staging messages into production.
 
 ## Testing
 

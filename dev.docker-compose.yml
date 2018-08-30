@@ -4,8 +4,10 @@ services:
     image: "mhart/alpine-node:8"
     expose:
       - "3000"
+      - "9229"
     ports:
       - "3000:3000"
+      - "9229:9229"
     volumes:
       - .:/code
     working_dir: "/code"

@@ -1,5 +1,5 @@
 {
   "ext": "*.ts",
-  "exec": "node_modules/.bin/ts-node --require dotenv/config",
+  "exec": "node --inspect=0.0.0.0:9229 --require ts-node/register --require dotenv/config",
   "watch": ["src"]
 }

@@ -6,8 +6,9 @@
   "scripts": {
     "start": "npm run migrate && node ./lib",
     "migrate": "node-pg-migrate up",
+    "dev-migrate": "NODE_ENV=dev npm run docker-compose-prefix -- npm run migrate",
     "build": "tsc",
-    "docker-compose-prefix": "docker-compose -f ./dev.docker-compose.yml run -p 3000:3000 --rm -e NODE_ENV=$NODE_ENV pushkin npx",
+    "docker-compose-prefix": "docker-compose --no-ansi -f ./dev.docker-compose.yml run -p 3000:3000 -p 9229:9229 --rm -e NODE_ENV=$NODE_ENV pushkin npx",
     "test": "NODE_ENV=test npm run docker-compose-prefix -- mocha --require ts-node/register \"test/**/*.ts\"",
     "test-watch": "NODE_ENV=test npm run docker-compose-prefix -- mocha --require ts-node/register \"test/**/*.ts\" --watch --watch-extensions ts",
     "build-interface-validation": "mkdir -p src/validators && ts-node ./build-validators.ts",
