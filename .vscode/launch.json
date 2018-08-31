@@ -13,10 +13,11 @@
       "port": 9229,
       "address": "localhost",
       "localRoot": "${workspaceFolder}",
-      "remoteRoot": "/usr/src/app",
+      "remoteRoot": "/code",
       "protocol": "inspector",
       "timeout": 60000,
-      "outputCapture": "std"
+      "outputCapture": "std",
+      "outFiles": ["${workspaceFolder}/src/**/*.ts"]
     }
   ]
 }

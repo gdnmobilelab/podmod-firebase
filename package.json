@@ -13,7 +13,7 @@
     "test-watch": "NODE_ENV=test npm run docker-compose-prefix -- mocha --require ts-node/register \"test/**/*.ts\" --watch --watch-extensions ts",
     "build-interface-validation": "mkdir -p src/validators && ts-node ./build-validators.ts",
     "dev": "NODE_ENV=dev npm run docker-compose-prefix -- nodemon src/index.ts",
-    "push": "node ./increment-and-push.js"
+    "version": "rm -rf lib && npm run build"
   },
   "author": "",
   "license": "ISC",
