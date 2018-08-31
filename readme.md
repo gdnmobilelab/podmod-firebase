@@ -67,7 +67,7 @@ However, you must also ensure that you have a `.env` file in your project direct
 
 ## Publishing a new build
 
-In addition to the usual Google Cloud steps to deploy a Docker container, you need to make sure you run `npm run build` before building a Docker image - this step transpiles the TypeScript into JavaScript, allowing the production Docker container to ignore TypeScript entirely.
+In addition to the usual Google Cloud steps to deploy a Docker container, you need to make sure you run [`npm version`](https://docs.npmjs.com/cli/version) to bump the version number and build the latest version of the code.
 
 ## Rebuilding validators
 
