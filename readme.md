@@ -55,7 +55,11 @@ which will run all the tests, then watch for any file changes, running them agai
 
 ## Running locally
 
-Similar to testing, this uses `docker-compose` to set up a local database:
+Similar to testing, this uses `docker-compose` to set up a local database. Before running dev you will need to perform database migrations:
+
+    npm run dev-migrate
+
+Then you can start the server:
 
     npm run dev
 
