@@ -20,10 +20,7 @@
           "$ref": "#/definitions/FCMApnsConfig"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "notification"
-      ]
+      "additionalProperties": false
     },
     "FCMTokenMessage": {
       "type": "object",
@@ -47,7 +44,6 @@
       },
       "additionalProperties": false,
       "required": [
-        "notification",
         "token"
       ]
     },
@@ -73,7 +69,6 @@
       },
       "additionalProperties": false,
       "required": [
-        "notification",
         "topic"
       ]
     },
@@ -99,8 +94,7 @@
       },
       "additionalProperties": false,
       "required": [
-        "condition",
-        "notification"
+        "condition"
       ]
     },
     "EnvironmentVariables": {

@@ -76,7 +76,7 @@ interface FCMApnsConfig {
 
 export interface FCMMessage {
   data?: any;
-  notification: FCMNotification;
+  notification?: FCMNotification;
   android?: FCMAndroidConfig;
   webpush?: FCMWebpushConfig;
   apns?: FCMApnsConfig;
