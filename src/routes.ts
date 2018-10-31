@@ -21,7 +21,7 @@ export function setRoutes(server: restify.Server) {
   server.post("/topics/:topic_name", checkForKey(ApiKeyType.Admin), sendMessageToTopic);
   server.post("/send", checkForKey(ApiKeyType.Admin), sendMessageToCondition);
 
-  server.post("/registrations/:registration_id", checkForKey(ApiKeyType.Admin), sendMessageToRegistration);
+  server.post("/registrations/:registration_id", checkForKey(ApiKeyType.User, false), sendMessageToRegistration);
   server.get("/topics/:topic_name", checkForKey(ApiKeyType.Admin), getTopicDetails);
   server.get("/topics/:topic_name/subscribers", checkForKey(ApiKeyType.Admin), getTopicSubscribers);
   server.get("/vapid-key", checkForKey(ApiKeyType.User), getVAPIDKey);

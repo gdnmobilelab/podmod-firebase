@@ -7,10 +7,10 @@ export enum ApiKeyType {
   User = "user"
 }
 
-export function checkForKey(keyType: ApiKeyType): restify.RequestHandler {
+export function checkForKey(keyType: ApiKeyType, enforceRestriction: boolean = true): restify.RequestHandler {
   if (
-    (Environment.ALLOW_ADMIN_OPERATIONS === "false" && keyType === ApiKeyType.Admin) ||
-    (Environment.ALLOW_USER_OPERATIONS === "false" && keyType === ApiKeyType.User)
+    (enforceRestriction && Environment.ALLOW_ADMIN_OPERATIONS === "false" && keyType === ApiKeyType.Admin) ||
+    (enforceRestriction && Environment.ALLOW_USER_OPERATIONS === "false" && keyType === ApiKeyType.User)
   ) {
     // This shuts off access to admin or user features entirely. The prime reason being so that
     // we can separate out instances between our adm and pub environments.
