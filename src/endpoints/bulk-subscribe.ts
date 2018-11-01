@@ -73,20 +73,31 @@ export const bulkSubscribeOrUnsubscribe: PushkinRequestHandler<
       throw new BadRequestError("Can only send up to 1000 IDs at once.");
     }
 
+    let duplicatedIds: string[] = [];
+
+    let uniqueIds = req.body.ids.reduce((arr, id, idx) => {
+      if (arr.indexOf(id) > -1) {
+        duplicatedIds.push(id);
+      } else {
+        arr.push(id);
+      }
+      return arr;
+    }, []);
+
     let operation: BatchOperation = req.method === "POST" ? "batchAdd" : "batchRemove";
 
-    let results = await sendRequest(operation, req.params.topic_name, req.body.ids, req.log);
+    let results = await sendRequest(operation, req.params.topic_name, uniqueIds, req.log);
     let errors: { id: string; error: string }[] = [];
     let successfulIDs: string[] = [];
 
     results.forEach((result, idx) => {
       if (!result.error) {
-        successfulIDs.push(req.body.ids[idx]);
+        successfulIDs.push(uniqueIds[idx]);
         return;
       }
       errors.push({
         error: result.error,
-        id: req.body.ids[idx]
+        id: uniqueIds[idx]
       });
     });
 
@@ -94,7 +105,7 @@ export const bulkSubscribeOrUnsubscribe: PushkinRequestHandler<
       // as suggested here: https://github.com/brianc/node-postgres/issues/957#issuecomment-295583050
 
       await req.db.query(
-        "INSERT INTO currently_subscribed (topic_id, firebase_id) SELECT DISTINCT $1, * FROM UNNEST ($2::text[])",
+        "INSERT INTO currently_subscribed (topic_id, firebase_id) SELECT $1, * FROM UNNEST ($2::text[])",
         [req.params.topic_name, successfulIDs]
       );
     } else {
@@ -104,7 +115,14 @@ export const bulkSubscribeOrUnsubscribe: PushkinRequestHandler<
       );
     }
 
-    res.json({ errors });
+    let warnings = duplicatedIds.map(id => {
+      return {
+        id,
+        warning: "This ID was included more than once in the request body"
+      };
+    });
+
+    res.json({ errors, warnings });
   } catch (err) {
     req.log.warn({ err: err.message }, "Failure when trying to send batch operation");
     next(err);

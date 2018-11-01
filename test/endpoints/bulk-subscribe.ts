@@ -91,10 +91,13 @@ describe("Bulk subscription operations", () => {
       },
       {
         id: "TEST_USER"
+      },
+      {
+        id: "TEST_USER2"
       }
     ];
 
-    let nocked = bulkOperationNock("batchAdd", users, "TEST_TOPIC");
+    let nocked = bulkOperationNock("batchAdd", [{ id: "TEST_USER" }, { id: "TEST_USER2" }], "TEST_TOPIC");
 
     let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers`, {
       method: "POST",
@@ -108,14 +111,19 @@ describe("Bulk subscription operations", () => {
     });
 
     let json = await res.json();
+
     expect(res.status).to.eq(200);
     expect(json.errors.length).to.eq(0);
+    expect(json.warnings.length).to.eq(1);
+    expect(json.warnings[0].id).to.eq("TEST_USER");
+
+    nocked.done();
 
     let result = await server.databaseClient.query(
       "SELECT * from currently_subscribed WHERE topic_id = $1 ORDER BY firebase_id ASC",
       [topic]
     );
-    expect(result.rowCount).to.eq(1);
+    expect(result.rowCount).to.eq(2);
   });
 
   it("Should unsubscribe users in bulk", async () => {
