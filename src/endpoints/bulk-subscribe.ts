@@ -105,7 +105,7 @@ export const bulkSubscribeOrUnsubscribe: PushkinRequestHandler<
       // as suggested here: https://github.com/brianc/node-postgres/issues/957#issuecomment-295583050
 
       await req.db.query(
-        "INSERT INTO currently_subscribed (topic_id, firebase_id) SELECT $1, * FROM UNNEST ($2::text[])",
+        "INSERT INTO currently_subscribed (topic_id, firebase_id) SELECT $1, * FROM UNNEST ($2::text[]) ON CONFLICT DO NOTHING",
         [req.params.topic_name, successfulIDs]
       );
     } else {

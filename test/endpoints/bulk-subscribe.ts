@@ -126,6 +126,38 @@ describe("Bulk subscription operations", () => {
     expect(result.rowCount).to.eq(2);
   });
 
+  it.only("Should be able to use the same ID twice in different operations", async () => {
+    let nocked = bulkOperationNock("batchAdd", [{ id: "TEST_USER" }], "TEST_TOPIC");
+
+    await fetch(`http://localhost:3000/topics/TEST_TOPIC/subscribers`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        ids: ["TEST_USER"]
+      })
+    });
+
+    nocked.done();
+    nocked = bulkOperationNock("batchAdd", [{ id: "TEST_USER" }], "TEST_TOPIC");
+
+    let res = await fetch(`http://localhost:3000/topics/TEST_TOPIC/subscribers`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        ids: ["TEST_USER"]
+      })
+    });
+
+    let json = await res.json();
+    expect(res.status).to.eq(200);
+  });
+
   it("Should unsubscribe users in bulk", async () => {
     const topic = "TEST_TOPIC";
 
