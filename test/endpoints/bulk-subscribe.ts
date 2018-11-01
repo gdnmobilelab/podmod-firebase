@@ -82,6 +82,42 @@ describe("Bulk subscription operations", () => {
     nocked.done();
   });
 
+  it("Should bulk subscribe when duplicate IDs exist", async () => {
+    const topic = "TEST_TOPIC";
+
+    const users = [
+      {
+        id: "TEST_USER"
+      },
+      {
+        id: "TEST_USER"
+      }
+    ];
+
+    let nocked = bulkOperationNock("batchAdd", users, "TEST_TOPIC");
+
+    let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: process.env.ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        ids: users.map(u => u.id)
+      })
+    });
+
+    let json = await res.json();
+    expect(res.status).to.eq(200);
+    expect(json.errors.length).to.eq(0);
+
+    let result = await server.databaseClient.query(
+      "SELECT * from currently_subscribed WHERE topic_id = $1 ORDER BY firebase_id ASC",
+      [topic]
+    );
+    expect(result.rowCount).to.eq(1);
+  });
+
   it("Should unsubscribe users in bulk", async () => {
     const topic = "TEST_TOPIC";
 
