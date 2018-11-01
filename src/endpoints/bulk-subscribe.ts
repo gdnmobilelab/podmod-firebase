@@ -91,18 +91,17 @@ export const bulkSubscribeOrUnsubscribe: PushkinRequestHandler<
     });
 
     if (operation === "batchAdd") {
+      // as suggested here: https://github.com/brianc/node-postgres/issues/957#issuecomment-295583050
+
       await req.db.query(
         "INSERT INTO currently_subscribed (topic_id, firebase_id) SELECT $1, * FROM UNNEST ($2::text[])",
         [req.params.topic_name, successfulIDs]
       );
     } else {
-      // Similarly there's no good way to say IN(argument_array) without declaring each variable. So
-      // we have to do that, too.
-
-      let args = [req.params.topic_name].concat(successfulIDs);
-      let inArgs = successfulIDs.map((id, idx) => "$" + (idx + 2));
-
-      await req.db.query(`DELETE FROM currently_subscribed WHERE topic_id = $1 AND firebase_id IN (${inArgs})`, args);
+      await req.db.query(
+        `DELETE FROM currently_subscribed WHERE topic_id = $1 AND firebase_id IN (SELECT * FROM UNNEST ($2::text[]))`,
+        [req.params.topic_name, successfulIDs]
+      );
     }
 
     res.json({ errors });
