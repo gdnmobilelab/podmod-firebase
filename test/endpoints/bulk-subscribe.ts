@@ -43,14 +43,11 @@ describe("Bulk subscription operations", () => {
   it("Should subscribe users in bulk", async () => {
     const topic = "TEST_TOPIC";
 
-    const users = [
-      {
-        id: "TEST_USER"
-      },
-      {
-        id: "TEST_USER2"
-      }
-    ];
+    const users = [];
+
+    for (let i = 0; i < 1000; i++) {
+      users.push({ id: `TEST_USER${i}` });
+    }
 
     let nocked = bulkOperationNock("batchAdd", users, "TEST_TOPIC");
 
@@ -66,16 +63,21 @@ describe("Bulk subscription operations", () => {
     });
 
     let json = await res.json();
+
     expect(res.status).to.eq(200);
     expect(json.errors.length).to.eq(0);
 
     let result = await server.databaseClient.query(
-      "SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3",
-      ["TEST_USER", "TEST_USER2", topic]
+      "SELECT * from currently_subscribed WHERE topic_id = $1 ORDER BY firebase_id ASC",
+      [topic]
     );
-    expect(result.rowCount).to.eq(2);
-    expect(result.rows[0].firebase_id).to.eq("TEST_USER");
-    expect(result.rows[1].firebase_id).to.eq("TEST_USER2");
+    expect(result.rowCount).to.eq(1000);
+
+    for (let i = 0; i < 1000; i++) {
+      let row = result.rows.find(r => r.firebase_id === `TEST_USER${i}`);
+      expect(row).to.exist;
+      expect(row.topic_id).to.eq("TEST_TOPIC");
+    }
 
     nocked.done();
   });

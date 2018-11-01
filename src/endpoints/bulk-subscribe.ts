@@ -91,22 +91,9 @@ export const bulkSubscribeOrUnsubscribe: PushkinRequestHandler<
     });
 
     if (operation === "batchAdd") {
-      // Postgres doesn't seem to have a good way to insert a lot of stuff at once, short of writing out
-      // VALUES() a lot, so... let's do that?
-
-      let values: string[] = [];
-      let args = [req.params.topic_name];
-
-      successfulIDs.forEach((id, idx) => {
-        values.push(`($1, $${idx + 2})`);
-        args.push(id);
-      });
-
       await req.db.query(
-        "INSERT INTO currently_subscribed (topic_id, firebase_id) VALUES " +
-          values.join(",") +
-          " ON CONFLICT DO NOTHING",
-        args
+        "INSERT INTO currently_subscribed (topic_id, firebase_id) SELECT $1, * FROM UNNEST ($2::text[])",
+        [req.params.topic_name, successfulIDs]
       );
     } else {
       // Similarly there's no good way to say IN(argument_array) without declaring each variable. So
