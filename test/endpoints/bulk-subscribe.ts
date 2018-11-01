@@ -126,7 +126,7 @@ describe("Bulk subscription operations", () => {
     expect(result.rowCount).to.eq(2);
   });
 
-  it.only("Should be able to use the same ID twice in different operations", async () => {
+  it("Should be able to use the same ID twice in different operations", async () => {
     let nocked = bulkOperationNock("batchAdd", [{ id: "TEST_USER" }], "TEST_TOPIC");
 
     await fetch(`http://localhost:3000/topics/TEST_TOPIC/subscribers`, {
