@@ -1,4 +1,5 @@
 import { PushkinRequestHandler } from "../util/request-handler";
+import { BadRequestError } from "restify-errors";
 
 interface TopicDetailsParams {
   topic_name: string;
@@ -41,23 +42,32 @@ interface TopicSubscriberParams {
 
 export const getTopicSubscribers: PushkinRequestHandler<void, TopicSubscriberParams> = async function(req, res, next) {
   try {
-    let pageNumber = 1;
+    let skip = 0;
+
+    if ("page" in req.query && "skip" in req.query) {
+      throw new BadRequestError("Cannot specify both page and skip parameters");
+    }
+
     if ("page" in req.query) {
       let parsed = parseInt(req.query.page, 10);
       if (isNaN(parsed)) {
         throw new Error("Could not parse page number provided");
       }
-      pageNumber = parsed;
+      skip = (parsed - 1) * 1000;
+    } else if ("skip" in req.query) {
+      let parsed = parseInt(req.query.skip, 10);
+      if (isNaN(parsed)) {
+        throw new Error("Could not parse skip number provided");
+      }
+      skip = parsed;
     }
-
-    let zeroIndexedPageNumber = pageNumber - 1;
 
     let { rows } = await req.db.query(
       `
       SELECT firebase_id from currently_subscribed WHERE topic_id = $1
       OFFSET $2 LIMIT $3
     `,
-      [req.params.topic_name, zeroIndexedPageNumber * 1000, 1000]
+      [req.params.topic_name, skip, 1000]
     );
 
     let ids = rows.map(r => r.firebase_id);
