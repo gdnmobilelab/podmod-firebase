@@ -121,7 +121,7 @@ describe("Topic Details", () => {
     expect(json[0]).to.eq("TEST_USER");
   });
 
-  it("Should page this results list correctly", async () => {
+  it("Should page results list correctly", async () => {
     let values: string[] = [];
     for (let x = 1; x <= 1001; x++) {
       values.push(`('TEST_TOPIC','TEST_USER_${x}')`);
@@ -154,7 +154,7 @@ describe("Topic Details", () => {
     expect(json[0]).to.eq("TEST_USER_1001");
   });
 
-  it("Should skip this results list correctly", async () => {
+  it("Should skip results list correctly", async () => {
     let values: string[] = [];
     for (let x = 1; x <= 1001; x++) {
       values.push(`('TEST_TOPIC','TEST_USER_${x}')`);
