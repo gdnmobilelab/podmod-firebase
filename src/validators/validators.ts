@@ -425,6 +425,12 @@
         },
         "launch-image": {
           "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "summary-arg": {
+          "type": "string"
         }
       },
       "additionalProperties": false

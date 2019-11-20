@@ -52,6 +52,9 @@ interface ApnsAlert {
   title?: string;
   body?: string;
   "launch-image"?: string;
+  subtitle?: string;
+  "summary-arg"?: string;
+  "summary-arg-count"?: number;
 }
 
 interface ApnsKeys {
