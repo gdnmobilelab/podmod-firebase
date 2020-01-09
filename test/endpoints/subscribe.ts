@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { createServer, Server } from "../../src/index";
 import { sendMessageNock } from "./send-message";
 import { namespaceTopic } from "../../src/util/namespace";
+import { withDBClient } from "../../src/util/db";
 
 export function subscribeUserNock(userId: string, topic: string) {
   return nock("https://iid.googleapis.com", {
@@ -59,17 +60,14 @@ describe("Toggle subscription state", () => {
     expect(res.status).to.eq(200);
     expect(json.subscribed).to.eq(true);
 
-    let result = await server.databaseClient.query(
-      "SELECT * from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
-      [userId, topic]
+    let result = await withDBClient(c =>
+      c.query("SELECT * from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2", [userId, topic])
     );
     expect(result.rowCount).to.eq(1);
 
     // Created by database triggers
 
-    let logResult = await server.databaseClient.query("SELECT * FROM subscription_log WHERE firebase_id = $1", [
-      userId
-    ]);
+    let logResult = await withDBClient(c => c.query("SELECT * FROM subscription_log WHERE firebase_id = $1", [userId]));
 
     expect(logResult.rowCount).to.eq(1);
 
@@ -93,9 +91,11 @@ describe("Toggle subscription state", () => {
 
     expect(res.status).to.eq(200);
 
-    let result = await server.databaseClient.query(
-      "SELECT subscribe_time from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
-      [userId, topic]
+    let result = await withDBClient(c =>
+      c.query("SELECT subscribe_time from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2", [
+        userId,
+        topic
+      ])
     );
     let firstTime = result.rows[0].subscribe_time;
 
@@ -114,9 +114,11 @@ describe("Toggle subscription state", () => {
 
     expect(res2.status).to.eq(200);
 
-    let result2 = await server.databaseClient.query(
-      "SELECT subscribe_time from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
-      [userId, topic]
+    let result2 = await withDBClient(c =>
+      c.query("SELECT subscribe_time from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2", [
+        userId,
+        topic
+      ])
     );
     expect(result2.rowCount).to.eq(1);
     let secondTime = result.rows[0].subscribe_time;
@@ -165,10 +167,9 @@ describe("Toggle subscription state", () => {
 
     let nocked = unsubscribeUserNock(userId, topic);
 
-    await server.databaseClient.query("INSERT INTO currently_subscribed (firebase_id,topic_id) VALUES ($1, $2)", [
-      userId,
-      topic
-    ]);
+    await withDBClient(c =>
+      c.query("INSERT INTO currently_subscribed (firebase_id,topic_id) VALUES ($1, $2)", [userId, topic])
+    );
 
     let res = await fetch(`http://localhost:3000/topics/${topic}/subscribers/${userId}`, {
       method: "DELETE",
@@ -184,17 +185,14 @@ describe("Toggle subscription state", () => {
 
     expect(json.subscribed).to.eq(false);
 
-    let result = await server.databaseClient.query(
-      "SELECT * from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2",
-      [userId, topic]
+    let result = await withDBClient(c =>
+      c.query("SELECT * from currently_subscribed WHERE firebase_id = $1 AND topic_id = $2", [userId, topic])
     );
     expect(result.rowCount).to.eq(0);
 
     // Created by database triggers
 
-    let logResult = await server.databaseClient.query("SELECT * FROM subscription_log WHERE firebase_id = $1", [
-      userId
-    ]);
+    let logResult = await withDBClient(c => c.query("SELECT * FROM subscription_log WHERE firebase_id = $1", [userId]));
 
     expect(logResult.rowCount).to.eq(2);
 

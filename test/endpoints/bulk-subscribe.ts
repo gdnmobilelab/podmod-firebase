@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { createServer, Server } from "../../src/index";
 import { sendMessageNock } from "./send-message";
 import { namespaceTopic } from "../../src/util/namespace";
+import { withDBClient } from "../../src/util/db";
 
 interface BulkOperationStub {
   id: string;
@@ -67,9 +68,8 @@ describe("Bulk subscription operations", () => {
     expect(res.status).to.eq(200);
     expect(json.errors.length).to.eq(0);
 
-    let result = await server.databaseClient.query(
-      "SELECT * from currently_subscribed WHERE topic_id = $1 ORDER BY firebase_id ASC",
-      [topic]
+    let result = await withDBClient(c =>
+      c.query("SELECT * from currently_subscribed WHERE topic_id = $1 ORDER BY firebase_id ASC", [topic])
     );
     expect(result.rowCount).to.eq(1000);
 
@@ -119,9 +119,8 @@ describe("Bulk subscription operations", () => {
 
     nocked.done();
 
-    let result = await server.databaseClient.query(
-      "SELECT * from currently_subscribed WHERE topic_id = $1 ORDER BY firebase_id ASC",
-      [topic]
+    let result = await await withDBClient(c =>
+      c.query("SELECT * from currently_subscribed WHERE topic_id = $1 ORDER BY firebase_id ASC", [topic])
     );
     expect(result.rowCount).to.eq(2);
   });
@@ -171,10 +170,12 @@ describe("Bulk subscription operations", () => {
     ];
 
     // Add users first, so we can check the database operations work
-    await server.databaseClient.query(`
+    await withDBClient(c =>
+      c.query(`
       INSERT INTO currently_subscribed (firebase_id, topic_id)
       VALUES ('TEST_USER', 'TEST_TOPIC'), ('TEST_USER2', 'TEST_TOPIC')
-      `);
+      `)
+    );
 
     let nocked = bulkOperationNock("batchRemove", users, "TEST_TOPIC");
 
@@ -194,9 +195,12 @@ describe("Bulk subscription operations", () => {
     expect(json.errors.length).to.eq(0);
     nocked.done();
 
-    let result = await server.databaseClient.query(
-      "SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3",
-      ["TEST_USER", "TEST_USER2", topic]
+    let result = await withDBClient(c =>
+      c.query("SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3", [
+        "TEST_USER",
+        "TEST_USER2",
+        topic
+      ])
     );
     expect(result.rowCount).to.eq(0);
   });
@@ -233,9 +237,12 @@ describe("Bulk subscription operations", () => {
     expect(json.errors[0].id).to.eq("TEST_USER");
     expect(json.errors[0].error).to.eq("NOT_FOUND");
 
-    let result = await server.databaseClient.query(
-      "SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3",
-      ["TEST_USER", "TEST_USER2", topic]
+    let result = await withDBClient(c =>
+      c.query("SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3", [
+        "TEST_USER",
+        "TEST_USER2",
+        topic
+      ])
     );
     expect(result.rowCount).to.eq(1);
     expect(result.rows[0].firebase_id).to.eq("TEST_USER2");
@@ -255,10 +262,12 @@ describe("Bulk subscription operations", () => {
     ];
 
     // Add users first, so we can check the database operations work
-    await server.databaseClient.query(`
+    await withDBClient(c =>
+      c.query(`
       INSERT INTO currently_subscribed (firebase_id, topic_id)
       VALUES ('TEST_USER', 'TEST_TOPIC'), ('TEST_USER2', 'TEST_TOPIC')
-      `);
+      `)
+    );
 
     // Subscriber users first, so we can check the database operations work
     let remnock = bulkOperationNock("batchRemove", users, "TEST_TOPIC");
@@ -280,9 +289,12 @@ describe("Bulk subscription operations", () => {
     expect(json.errors[0].id).to.eq("TEST_USER");
     expect(json.errors[0].error).to.eq("NOT_FOUND");
 
-    let result = await server.databaseClient.query(
-      "SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3",
-      ["TEST_USER", "TEST_USER2", topic]
+    let result = await withDBClient(c =>
+      c.query("SELECT * from currently_subscribed WHERE firebase_id IN ($1,$2) AND topic_id = $3", [
+        "TEST_USER",
+        "TEST_USER2",
+        topic
+      ])
     );
     expect(result.rowCount).to.eq(1);
     expect(result.rows[0].firebase_id).to.eq("TEST_USER");

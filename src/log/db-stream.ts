@@ -2,11 +2,11 @@ import * as pg from "pg";
 import * as stream from "stream";
 
 export class DbStream extends stream.Writable {
-  client: pg.Client;
+  client: pg.PoolClient;
   activeQuery: boolean = false;
   finaliseCallback?: Function;
 
-  constructor(client: pg.Client) {
+  constructor(client: pg.PoolClient) {
     super({ objectMode: true });
     this.client = client;
   }

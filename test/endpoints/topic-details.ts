@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { createServer, Server } from "../../src/index";
 import Environment from "../../src/util/env";
 import { subscribeUserNock, unsubscribeUserNock } from "./subscribe";
+import { withDBClient } from "../../src/util/db";
 
 describe("Topic Details", () => {
   let server: Server;
@@ -127,8 +128,8 @@ describe("Topic Details", () => {
       values.push(`('TEST_TOPIC','TEST_USER_${x}')`);
     }
 
-    await server.databaseClient.query(
-      "INSERT INTO currently_subscribed (topic_id, firebase_id) VALUES " + values.join(",")
+    await withDBClient(c =>
+      c.query("INSERT INTO currently_subscribed (topic_id, firebase_id) VALUES " + values.join(","))
     );
 
     let res = await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers", {
@@ -160,8 +161,8 @@ describe("Topic Details", () => {
       values.push(`('TEST_TOPIC','TEST_USER_${x}')`);
     }
 
-    await server.databaseClient.query(
-      "INSERT INTO currently_subscribed (topic_id, firebase_id) VALUES " + values.join(",")
+    await withDBClient(c =>
+      c.query("INSERT INTO currently_subscribed (topic_id, firebase_id) VALUES " + values.join(","))
     );
 
     let res = await fetch("http://localhost:3000/topics/TEST_TOPIC/subscribers", {

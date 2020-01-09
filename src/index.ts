@@ -3,49 +3,33 @@ import * as restifyCORS from "restify-cors-middleware";
 import { applyCachingHeaders } from "./util/http-cache-headers";
 // import { batchOperation } from "./endpoints/batch";
 import { createLogger } from "./log/log";
-import { createClient as createDatabaseClient, addClientToRequest } from "./util/db";
-import { JWT } from "google-auth-library";
+import { setup as setupDB, withDBClient, shutdown as shutdownDB } from "./util/db";
 import Environment, { check as checkEnvironmentVariables } from "./util/env";
+import { setup as setupJWT } from "./util/jwt";
 import { promisify } from "util";
 import * as fs from "fs";
 import { setRoutes } from "./routes";
-import * as pg from "pg";
 
 let { version } = JSON.parse(fs.readFileSync(__dirname + "/../package.json", "UTF-8"));
 
 export interface Server {
   stop: () => void;
-  databaseClient: pg.Client;
 }
 
 // When running tests we need to spin up and spin down the server on demand, so
 // we wrap the actual creation in a function.
 
 export async function createServer(): Promise<Server> {
-  const databaseClient = createDatabaseClient();
+  await setupDB();
 
-  // our custom bunyan instance
-  const { log, dbStream } = createLogger(databaseClient);
+  // our custom bunyan instance. TODO: remove the DB logging part, we don't need it any more
+  const { log, dbStream } = await withDBClient(c => createLogger(c));
 
   // create our restify server and have it use our logger, rather than
   // its own created one.
   const server = restify.createServer({ log });
 
-  // Annoying, some of our Firebase operations require the server key, whereas others
-  // require a JWT token. We create an instance of the JWT token here, then add it to
-  // the request object for use later.
-
-  // dotenv doesn't parse out newlines, so we need to do a manual replace
-  const privateKey = Environment.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
-  let jwt = new JWT(
-    Environment.FIREBASE_CLIENT_EMAIL,
-    null,
-    privateKey,
-    ["https://www.googleapis.com/auth/firebase.messaging", "https://www.googleapis.com/auth/cloud-platform"],
-    null
-  );
-
-  await jwt.authorize();
+  await setupJWT();
 
   // In almost all instances we're going to be running this on a different subdomain
   // than the pages actually calling the API. So we need to allow CORS requests, but
@@ -83,10 +67,6 @@ export async function createServer(): Promise<Server> {
     }),
     restify.plugins.requestLogger(),
     cors.actual,
-    // make our database client available on req.db. Most DB stuff goes through req.log() but
-    // not all
-    addClientToRequest(databaseClient, jwt),
-
     applyCachingHeaders
   );
 
@@ -108,11 +88,10 @@ export async function createServer(): Promise<Server> {
   // Both the pg and restify connection functions take callbacks, so we need to promisify them:
 
   let webListenPromise = promisify(server.listen).apply(server, [port]);
-  let dbConnectPromise = promisify(databaseClient.connect).apply(databaseClient);
 
   try {
     // If we can't successfully connect to the database or listen on the specified port, crash out.
-    await Promise.all([webListenPromise, dbConnectPromise]);
+    await webListenPromise;
     log.warn({ action: "server-start", port, env: Environment.NODE_ENV, version }, "Server started.");
   } catch (err) {
     log.error({ error: err.message, stack: err.stack }, "Server failed to start");
@@ -126,12 +105,12 @@ export async function createServer(): Promise<Server> {
     // We finish the DB stream before the other promises because we need to make
     // sure it's finished before we close the DB connection.
     await promisify(dbStream.end).apply(dbStream);
-    await Promise.all([promisify(databaseClient.end).apply(databaseClient), promisify(server.close).apply(server)]);
+    await Promise.all([shutdownDB(), promisify(server.close).apply(server)]);
 
     // log.warn({ action: "server-stop" }, "Stopped server");
   };
 
-  return { stop, databaseClient };
+  return { stop };
 }
 
 if (require.main === module) {

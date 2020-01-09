@@ -5,6 +5,7 @@ import { namespaceTopic } from "../util/namespace";
 import { FCMBatchOperationResponse } from "../interface/fcm-responses";
 import { PushkinRequestHandler } from "../util/request-handler";
 import { BadRequestError } from "restify-errors";
+import { withDBClient } from "../util/db";
 
 type BatchOperation = "batchAdd" | "batchRemove";
 
@@ -101,19 +102,20 @@ export const bulkSubscribeOrUnsubscribe: PushkinRequestHandler<
       });
     });
 
-    if (operation === "batchAdd") {
-      // as suggested here: https://github.com/brianc/node-postgres/issues/957#issuecomment-295583050
-
-      await req.db.query(
-        "INSERT INTO currently_subscribed (topic_id, firebase_id) SELECT $1, * FROM UNNEST ($2::text[]) ON CONFLICT DO NOTHING",
-        [req.params.topic_name, successfulIDs]
-      );
-    } else {
-      await req.db.query(
-        `DELETE FROM currently_subscribed WHERE topic_id = $1 AND firebase_id IN (SELECT * FROM UNNEST ($2::text[]))`,
-        [req.params.topic_name, successfulIDs]
-      );
-    }
+    await withDBClient(async client => {
+      if (operation === "batchAdd") {
+        // as suggested here: https://github.com/brianc/node-postgres/issues/957#issuecomment-295583050
+        await client.query(
+          "INSERT INTO currently_subscribed (topic_id, firebase_id) SELECT $1, * FROM UNNEST ($2::text[]) ON CONFLICT DO NOTHING",
+          [req.params.topic_name, successfulIDs]
+        );
+      } else {
+        await client.query(
+          `DELETE FROM currently_subscribed WHERE topic_id = $1 AND firebase_id IN (SELECT * FROM UNNEST ($2::text[]))`,
+          [req.params.topic_name, successfulIDs]
+        );
+      }
+    });
 
     let warnings = duplicatedIds.map(id => {
       return {

@@ -5,7 +5,7 @@ import { DbStream } from "./db-stream";
 import { SlackWebhook } from "./slack-webhook";
 import Environment from "../util/env";
 
-export function createLogger(client: pg.Client) {
+export function createLogger(client: pg.PoolClient) {
   const log = bunyan.createLogger({
     name: "pushkin-firebase"
   });

@@ -11,11 +11,10 @@ import {
 import { FCMSendMessageResponse } from "../interface/fcm-responses";
 import { validate, ValidatorDefinition } from "../validators/validate";
 import Environment from "../util/env";
-import { join } from "path";
 import { ValidationFailedError } from "../util/errors";
 import { namespaceTopic, namespaceCondition } from "../util/namespace";
 import { InternalServerError, BadRequestError } from "restify-errors";
-import { Z_ERRNO } from "zlib";
+import { getAccessToken } from "../util/jwt";
 
 export async function sendMessage(
   message: FCMTokenMessage | FCMTopicMessage | FCMConditionMessage,
@@ -28,7 +27,7 @@ export async function sendMessage(
     validate_only: false
   };
 
-  let { token } = await req.jwt.getAccessToken();
+  let { token } = await getAccessToken();
   let res = await fetch(`https://fcm.googleapis.com/v1/projects/${Environment.FCM_PROJECT}/messages:send`, {
     method: "POST",
     headers: {

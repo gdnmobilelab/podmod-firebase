@@ -1,5 +1,6 @@
 import { PushkinRequestHandler } from "../util/request-handler";
 import { BadRequestError } from "restify-errors";
+import { withDBClient } from "../util/db";
 
 interface TopicDetailsParams {
   topic_name: string;
@@ -7,8 +8,9 @@ interface TopicDetailsParams {
 
 export const getTopicDetails: PushkinRequestHandler<void, TopicDetailsParams> = async function(req, res, next) {
   try {
-    let { rows } = await req.db.query(
-      `
+    let { rows } = await withDBClient(c =>
+      c.query(
+        `
       SELECT 'current' as column, COUNT(*) as total from currently_subscribed WHERE topic_id = $1
       UNION
       SELECT action, COUNT (DISTINCT firebase_id)
@@ -17,7 +19,8 @@ export const getTopicDetails: PushkinRequestHandler<void, TopicDetailsParams> = 
       GROUP BY action
 
     `,
-      [req.params.topic_name]
+        [req.params.topic_name]
+      )
     );
 
     let current = rows.find(r => r.column === "current");
@@ -62,12 +65,14 @@ export const getTopicSubscribers: PushkinRequestHandler<void, TopicSubscriberPar
       skip = parsed;
     }
 
-    let { rows } = await req.db.query(
-      `
+    let { rows } = await withDBClient(c =>
+      c.query(
+        `
       SELECT firebase_id from currently_subscribed WHERE topic_id = $1
       OFFSET $2 LIMIT $3
     `,
-      [req.params.topic_name, skip, 1000]
+        [req.params.topic_name, skip, 1000]
+      )
     );
 
     let ids = rows.map(r => r.firebase_id);

@@ -10,6 +10,7 @@ import Environment from "../util/env";
 import { namespaceTopic } from "../util/namespace";
 import { validate } from "../validators/validate";
 import { JSONifyError } from "../util/jsonify-error";
+import { withDBClient } from "../util/db";
 
 async function sendRequest(id: string, topicName: string, method: string, log: bunyan): Promise<boolean> {
   let namespacedTopic = namespaceTopic(topicName);
@@ -73,7 +74,7 @@ export const subscribeOrUnsubscribe: PushkinRequestHandler<
       query = "DELETE FROM currently_subscribed WHERE firebase_id = $1 AND topic_id = $2";
     }
 
-    await req.db.query(query, [req.params.registration_id, req.params.topic_name]);
+    await withDBClient(c => c.query(query, [req.params.registration_id, req.params.topic_name]));
 
     if (req.body && req.body.confirmation) {
       validate(req.body.confirmation, "FCMMessage");

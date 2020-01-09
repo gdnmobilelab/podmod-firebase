@@ -5,6 +5,7 @@ import { createServer, Server } from "../../src/index";
 import Environment from "../../src/util/env";
 import { subscribeUserNock, unsubscribeUserNock } from "../endpoints/subscribe";
 import { portIntoLogsQuery, portIntoCurrentSubscribersQuery } from "../../migrations/1531948410830_subscription-log";
+import { withDBClient } from "../../src/util/db";
 
 describe("Migrations", () => {
   let server: Server;
@@ -83,35 +84,38 @@ describe("Migrations", () => {
     await new Promise(fulfill => setTimeout(fulfill, 100));
 
     // check against this later
-    let existingData = await server.databaseClient.query("SELECT * FROM subscription_log");
-    let existingRows = existingData.rows.sort((a, b) => a.time - b.time);
-    // now clean out the log table, so we can manually repopulate it
-    await server.databaseClient.query("DELETE FROM subscription_log");
-    await server.databaseClient.query(portIntoLogsQuery);
 
-    let newData = await server.databaseClient.query("SELECT * FROM subscription_log");
-    let newRows = newData.rows.sort((a, b) => a.time - b.time);
+    await withDBClient(async client => {
+      let existingData = await client.query("SELECT * FROM subscription_log");
+      let existingRows = existingData.rows.sort((a, b) => a.time - b.time);
+      // now clean out the log table, so we can manually repopulate it
+      await client.query("DELETE FROM subscription_log");
+      await client.query(portIntoLogsQuery);
 
-    expect(newRows.length).to.eq(existingRows.length);
+      let newData = await client.query("SELECT * FROM subscription_log");
+      let newRows = newData.rows.sort((a, b) => a.time - b.time);
 
-    newRows.forEach((newRow, idx) => {
-      let existingRow = existingRows[idx];
+      expect(newRows.length).to.eq(existingRows.length);
 
-      expect(newRow.action).to.eq(existingRow.action);
-      expect(newRow.firebase_id).to.eq(existingRow.firebase_id);
-      expect(newRow.topic_id).to.eq(existingRow.topic_id);
+      newRows.forEach((newRow, idx) => {
+        let existingRow = existingRows[idx];
+
+        expect(newRow.action).to.eq(existingRow.action);
+        expect(newRow.firebase_id).to.eq(existingRow.firebase_id);
+        expect(newRow.topic_id).to.eq(existingRow.topic_id);
+      });
+
+      // Now port these subscriptions into the current subscription table. Again, first clear out
+      // existing data. TRUNCATE does not fire our triggers:
+
+      await client.query("TRUNCATE TABLE currently_subscribed");
+
+      await client.query(portIntoCurrentSubscribersQuery);
+
+      let result = await client.query("SELECT * FROM currently_subscribed");
+      expect(result.rowCount).to.eq(1);
+      expect(result.rows[0].firebase_id).to.eq("TEST_USER");
     });
-
-    // Now port these subscriptions into the current subscription table. Again, first clear out
-    // existing data. TRUNCATE does not fire our triggers:
-
-    await server.databaseClient.query("TRUNCATE TABLE currently_subscribed");
-
-    await server.databaseClient.query(portIntoCurrentSubscribersQuery);
-
-    let result = await server.databaseClient.query("SELECT * FROM currently_subscribed");
-    expect(result.rowCount).to.eq(1);
-    expect(result.rows[0].firebase_id).to.eq("TEST_USER");
 
     sub.done();
   });
