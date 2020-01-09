@@ -4,8 +4,8 @@ import fetch from "node-fetch";
 import { PushkinRequest, PushkinRequestHandler } from "../util/request-handler";
 import Environment from "../util/env";
 import { BadRequestError, InternalServerError } from "restify-errors";
-import { Validator } from "jsonschema";
 import { validate } from "../validators/validate";
+import { getAccessToken } from "../util/jwt";
 
 // API documentation for this:
 // https://developers.google.com/instance-id/reference/server#create_relationship_maps_for_app_instances
@@ -22,18 +22,16 @@ async function getIdForWebSubscription(sub: WebSubscription, req: PushkinRequest
   // check we have the right data types
   validate(subscriptionToSend, "WebSubscription");
 
-  let response = await fetch("https://fcm.googleapis.com/fcm/connect/subscribe", {
+  const { token } = await getAccessToken();
+
+  let response = await fetch("https://iid.googleapis.com/v1/web/iid", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token,
+      "Crypto-Key": "p256ecdsa=" + Environment.VAPID_PUBLIC_KEY
     },
-    body: JSON.stringify({
-      authorized_entity: Environment.FIREBASE_SENDER_ID,
-      endpoint: subscriptionToSend.endpoint,
-      encryption_key: subscriptionToSend.keys.p256dh,
-      encryption_auth: subscriptionToSend.keys.auth,
-      application_pub_key: Environment.VAPID_PUBLIC_KEY
-    })
+    body: JSON.stringify(subscriptionToSend)
   });
 
   let json = (await response.json()) as FCMWebRegistrationResponse;

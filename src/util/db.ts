@@ -12,6 +12,9 @@ pg.types.setTypeParser(20, val => parseInt(val, 10));
 let pool: pg.Pool | undefined = undefined;
 
 export async function setup() {
+  if (pool) {
+    throw new Error("DB Pool is already set up");
+  }
   pool = new pg.Pool({
     connectionString: Environment.DATABASE_URL
   });
@@ -26,6 +29,7 @@ export async function shutdown() {
     throw new Error("DB is not set up");
   }
   await pool.end();
+  pool = undefined;
 }
 
 export async function withDBClient<T>(cb: (client: pg.PoolClient) => T | Promise<T>): Promise<T> {
@@ -42,15 +46,3 @@ export async function withDBClient<T>(cb: (client: pg.PoolClient) => T | Promise
     client.release();
   }
 }
-
-// export function createClient() {
-//   return new pg.Client(Environment.DATABASE_URL);
-// }
-
-// export function addClientToRequest(client: pg.Client, jwt: JWT) {
-//   return function(req: PushkinRequest<any, any>, res: restify.Response, next: restify.Next) {
-//     req.db = client;
-//     req.jwt = jwt;
-//     next();
-//   };
-// }
