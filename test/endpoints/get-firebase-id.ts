@@ -31,19 +31,19 @@ describe("Get Firebase ID", () => {
     // than the entire subscription object. So the 'expireTime' key above should
     // not appear.
 
-    let nocked = nock("https://fcm.googleapis.com", {
+    let nocked = nock("https://iid.googleapis.com", {
       reqheaders: {
         "Content-Type": "application/json"
       }
     })
       .post(
-        "/fcm/connect/subscribe",
+        "/v1/web/iid",
         JSON.stringify({
-          authorized_entity: Environment.FIREBASE_SENDER_ID,
-          endpoint: testSubscription.endpoint,
-          encryption_key: testSubscription.keys.p256dh,
-          encryption_auth: testSubscription.keys.auth,
-          application_pub_key: Environment.VAPID_PUBLIC_KEY
+          endpoint: "http://www.example.com/push-endpoint",
+          keys: {
+            p256dh: "P256DH_KEY",
+            auth: "TEST_AUTH"
+          }
         })
       )
       .reply(
