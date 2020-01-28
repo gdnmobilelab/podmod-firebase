@@ -103,6 +103,7 @@ describe("Get Firebase ID", () => {
           results: [
             {
               status: "OK",
+              apns_token: testSubscription.device_id,
               registration_token: "TEST_TOKEN"
             }
           ]
@@ -124,6 +125,80 @@ describe("Get Firebase ID", () => {
 
     let json = await res.json();
     expect(json.id).to.eq("TEST_TOKEN");
+    nocked.done();
+  });
+
+  it("Should stack requests for iOS subscriptions", async function() {
+    const testSubscriptions = new Array(102).fill("").map((_, i) => {
+      return {
+        sandbox: false,
+        device_id: "TEST_DEVICE_ID_" + i,
+        bundle_name: "bundle.name.two",
+        platform: "iOS"
+      };
+    });
+
+    const testResponses = testSubscriptions.map((s, idx) => {
+      return {
+        status: "OK",
+        apns_token: s.device_id,
+        registration_token: "TEST_TOKEN_" + idx
+      };
+    });
+
+    // Set up our HTTP mock to check that we're sending the correct information
+    // over to FCM. The POST body should only have keys we've specified, rather
+    // than the entire subscription object. So the 'expireTime' key above should
+    // not appear.
+
+    let arrayLengths = [];
+
+    let nocked = nock("https://iid.googleapis.com", {
+      reqheaders: {
+        "Content-Type": "application/json",
+        authorization: `key=${process.env.FIREBASE_AUTH_KEY}`
+      }
+    })
+      .post("/iid/v1:batchImport")
+      .times(3)
+      .delay(10)
+      .reply(200, (url, body, callback) => {
+        arrayLengths.push(body.apns_tokens.length);
+
+        let ids = body.apns_tokens.map(t => {
+          return {
+            status: "OK",
+            apns_token: t,
+            registration_token: "TEST_TOKEN_" + testSubscriptions.findIndex(s => s.device_id === t)
+          };
+        });
+        callback(null, JSON.stringify({ results: ids }));
+      });
+
+    // Now finally send our actual test request
+
+    const responses = testSubscriptions.map((sub, idx) => {
+      return fetch("http://localhost:3000/registrations", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: process.env.USER_API_KEY
+        },
+        body: JSON.stringify({ subscription: sub })
+      })
+        .then(res => {
+          expect(res.status).to.eq(200);
+          return res.json();
+        })
+        .then(json => {
+          expect(json.id).to.eq("TEST_TOKEN_" + idx);
+        });
+    });
+
+    await Promise.all(responses);
+
+    // expect(arrayLengths).to.deep.equal([1, 100, 1]);
+
     nocked.done();
   });
 

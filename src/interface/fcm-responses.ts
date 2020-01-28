@@ -28,7 +28,7 @@ export interface FCMWebRegistrationResponse {
   token?: string;
 }
 
-interface FCMiOSRegistrationResponse {
+export interface FCMiOSRegistrationResponse {
   status: string;
   registration_token?: string;
   apns_token: string;

@@ -1,4 +1,4 @@
-import { BadRequestError, HttpError } from "restify-errors";
+import { BadRequestError, HttpError, InternalServerError } from "restify-errors";
 
 export class ValidationFailedError extends BadRequestError {
   constructor(message: string, private validationErrors: string[]) {
@@ -9,5 +9,11 @@ export class ValidationFailedError extends BadRequestError {
     let base = super.toJSON();
     base.validation_errors = this.validationErrors;
     return base;
+  }
+}
+
+export class RemoteServerError extends InternalServerError {
+  constructor(message: string, public responseJSON: any) {
+    super(message);
   }
 }
