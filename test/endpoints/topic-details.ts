@@ -6,7 +6,7 @@ import Environment from "../../src/util/env";
 import { subscribeUserNock, unsubscribeUserNock } from "./subscribe";
 import { withDBClient } from "../../src/util/db";
 
-describe("Topic Details", () => {
+describe.only("Topic Details", () => {
   let server: Server;
 
   before(async () => {

@@ -105,7 +105,12 @@ export async function createServer(): Promise<Server> {
     // We finish the DB stream before the other promises because we need to make
     // sure it's finished before we close the DB connection.
     await promisify(dbStream.end).apply(dbStream);
-    await Promise.all([shutdownDB(), promisify(server.close).apply(server)]);
+    console.log("stream ended");
+    await shutdownDB();
+    console.log("db shut down");
+    await promisify(server.close).apply(server);
+    console.log("server closed");
+    // await Promise.all([shutdownDB(), promisify(server.close).apply(server)]);
 
     // log.warn({ action: "server-stop" }, "Stopped server");
   };

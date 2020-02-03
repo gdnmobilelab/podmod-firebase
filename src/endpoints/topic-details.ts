@@ -64,7 +64,7 @@ export const getTopicSubscribers: PushkinRequestHandler<void, TopicSubscriberPar
       }
       skip = parsed;
     }
-
+    console.log("SKIP", skip);
     let { rows } = await withDBClient(c =>
       c.query(
         `
