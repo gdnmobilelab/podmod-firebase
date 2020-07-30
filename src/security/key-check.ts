@@ -28,7 +28,7 @@ export function checkForKey(keyType: ApiKeyType, enforceRestriction: boolean = t
   // function run when the request is received.
 
   return function(req, res, next) {
-    let auth = req.headers.authorization;
+    let auth = req.headers['x-api-key'] || req.headers.authorization;
 
     if (!auth) {
       req.log.warn({ url: req.url }, "Attempt to access endpoint without specifying API key.");
