@@ -22,4 +22,7 @@ export interface EnvironmentVariables {
   PERMITTED_IOS_BUNDLES?: string;
   ALLOW_ADMIN_OPERATIONS?: string;
   ALLOW_USER_OPERATIONS?: string;
+  VERIFY_IAP?: string;
+  IAP_ALLOWLIST?: string;
+  IAP_DISABLE_LOG?: string;
 }

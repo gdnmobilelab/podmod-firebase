@@ -39,6 +39,9 @@ Pushkin requires a number of environment variables to be set in order to functio
 - `ADMIN_API_KEY`: same as above, except for admin-level operations like sending messages
 - `TOPIC_PREFIX`: in case we're using multiple instances of Pushkin with one Firebase account (we only have one for production, for example) all Firebase topics will be prefixed with this string. Unless you're doing something particularly strange this should be invisible within your Pushkin instance.
 - `VAPID_PUBLIC_KEY`: used in web notifications. Right now it has to be hardcoded to FCM's key (see the [wiki](https://github.com/newsdev/pushkin/wiki/Getting-a-token) for details)
+- `VERIFY_IAP`: whether to verify GCP IAP headers. By default these headers (if present) are not verified.
+- `IAP_ALLOWLIST`: comma-separated list of emails and domains that are allowed to access the application.
+- `IAP_DISABLE_LOG`: whether to disable IAP header verification logging. By default all accesses are logged.
 - `NODE_ENV`: a very common environment variable in node projects, is either `production`, `staging` or `development`. Is also used alongside `TOPIC_PREFIX` when interfacing with Firebase topics, to ensure we don't leak staging messages into production.
 
 ## Testing

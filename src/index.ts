@@ -6,6 +6,7 @@ import { createLogger } from "./log/log";
 import { setup as setupDB, withDBClient, shutdown as shutdownDB } from "./util/db";
 import Environment, { check as checkEnvironmentVariables } from "./util/env";
 import { setup as setupJWT } from "./util/jwt";
+import { verifyIAPHeader } from "./security/iap-check";
 import { promisify } from "util";
 import * as fs from "fs";
 import { setRoutes } from "./routes";
@@ -49,9 +50,9 @@ export async function createServer(): Promise<Server> {
 
   // pre() calls are run before any route matching. In this case, it ensures that any
   // OPTIONS request gets the correct CORS response, irrespective of whether we have a matching
-  // route.
+  // route, and that IAP is validated.
 
-  server.pre(cors.preflight);
+  server.pre(cors.preflight, verifyIAPHeader);
 
   // use() on the other hand only runs on requests that have matching routes.
 
