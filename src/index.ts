@@ -1,3 +1,5 @@
+import "./tracer"; // must come before importing any instrumented module.
+
 import * as restify from "restify";
 import * as restifyCORS from "restify-cors-middleware";
 import { applyCachingHeaders } from "./util/http-cache-headers";

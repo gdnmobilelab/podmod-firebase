@@ -19,6 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "bunyan": "^1.8.12",
+    "dd-trace": "^0.30.6",
     "google-auth-library": "^2.0.1",
     "jsonschema": "^1.2.3",
     "jsonwebtoken": "^8.5.1",
